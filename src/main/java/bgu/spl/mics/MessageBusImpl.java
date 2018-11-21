@@ -1,5 +1,11 @@
 package bgu.spl.mics;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.concurrent.PriorityBlockingQueue;
+
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
  * Write your implementation here!
@@ -7,10 +13,27 @@ package bgu.spl.mics;
  */
 public class MessageBusImpl implements MessageBus {
 
+	private static volatile MessageBus instance=null;
+	private static Object o =new Object();
+	private HashMap<MicroService,Queue<Message>> queueMap;
+
+//A Thread safe constructor
+	private MessageBusImpl(){}
+	public static MessageBus getInstance(){
+		MessageBus result= instance;
+		if (result==null) {
+			synchronized (o){
+				result=instance;
+				if (result==null)
+					instance=result=new MessageBusImpl();
+			}
+		}
+		return result;
+	}
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		// TODO Auto-generated method stub
 
+	   	// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -21,7 +44,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-		// TODO Auto-generated method stub
+		
 
 	}
 
@@ -40,13 +63,13 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void register(MicroService m) {
-		// TODO Auto-generated method stub
+		queueMap.put(m,new PriorityBlockingQueue<>());
 
 	}
 
 	@Override
 	public void unregister(MicroService m) {
-		// TODO Auto-generated method stub
+	queueMap.remove(m);
 
 	}
 

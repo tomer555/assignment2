@@ -22,7 +22,7 @@ public abstract class MicroService implements Runnable {
 
     private boolean terminated = false;
     private final String name;
-
+    private MessageBus msgBus=null;
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
      *             does not have to be unique)
@@ -93,8 +93,8 @@ public abstract class MicroService implements Runnable {
      * 	       			null in case no micro-service has subscribed to {@code e.getClass()}.
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
-        //TODO: implement this.
-        return null; //TODO: delete this line :)
+     Future<T> f= msgBus.sendEvent(e);
+        return f; //TODO: delete this line :)
     }
 
     /**
@@ -149,6 +149,7 @@ public abstract class MicroService implements Runnable {
     @Override
     public final void run() {
         initialize();
+        msgBus=MessageBusImpl.getInstance();
         while (!terminated) {
             System.out.println("NOT IMPLEMENTED!!!"); //TODO: you should delete this line :)
         }
