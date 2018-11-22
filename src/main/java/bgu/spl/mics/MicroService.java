@@ -151,8 +151,11 @@ public abstract class MicroService implements Runnable {
         initialize();
         msgBus=MessageBusImpl.getInstance();
         while (!terminated) {
-            System.out.println("NOT IMPLEMENTED!!!"); //TODO: you should delete this line :)
+            System.out.println("NOT IMPLEMENTED!!!");
+
+
         }
+        msgBus.unregister(this);
     }
 
 }

@@ -1,9 +1,9 @@
 package bgu.spl.mics;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import jdk.internal.net.http.common.Pair;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
 /**
@@ -15,10 +15,17 @@ public class MessageBusImpl implements MessageBus {
 
 	private static volatile MessageBus instance=null;
 	private static Object o =new Object();
-	private HashMap<MicroService,Queue<Message>> queueMap;
+	private ConcurrentHashMap<MicroService,Queue<Message>> queueMap;
+	private Vector<Pair<? extends Message,Queue<MicroService>>> messageSubscribers;
+
 
 //A Thread safe constructor
-	private MessageBusImpl(){}
+	private MessageBusImpl(){
+		this.queueMap=new ConcurrentHashMap<>();
+		messageSubscribers=new myVector<>();
+
+
+	}
 	public static MessageBus getInstance(){
 		MessageBus result= instance;
 		if (result==null) {
@@ -33,7 +40,11 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 
-	   	// TODO Auto-generated method stub
+	   	for (Pair<? extends Message,Queue<MicroService>> pair :messageSubscribers){
+	          if(type.isInstance(pair.first))    {
+	          	pair.second.add(m);
+			}
+		}
 	}
 
 	@Override
