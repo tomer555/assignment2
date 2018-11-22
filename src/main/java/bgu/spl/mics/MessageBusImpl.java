@@ -3,8 +3,9 @@ package bgu.spl.mics;
 import jdk.internal.net.http.common.Pair;
 
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
@@ -16,13 +17,19 @@ public class MessageBusImpl implements MessageBus {
 	private static volatile MessageBus instance=null;
 	private static Object o =new Object();
 	private ConcurrentHashMap<MicroService,Queue<Message>> queueMap;
-	private Vector<Pair<? extends Message,Queue<MicroService>>> messageSubscribers;
+	//private ConcurrentHashMap< Class<? extends Event<?>>,Queue<MicroService>> eventSubscribersMap;
+	private ConcurrentHashMap< Class<?>,Queue<MicroService>> eventSubscribersMap;
+	private ConcurrentHashMap< Class<?>,Queue<MicroService>> broadcastSubscribersMap;
+	//private myVector<Pair<? extends Message, BlockingQueue<MicroService>>> messageSubscribers;
 
 
 //A Thread safe constructor
 	private MessageBusImpl(){
 		this.queueMap=new ConcurrentHashMap<>();
-		messageSubscribers=new myVector<>();
+		this.eventSubscribersMap=new ConcurrentHashMap<>();
+		this.broadcastSubscribersMap=new ConcurrentHashMap<>();
+
+		//messageSubscribers= new myVector<>();
 
 
 	}
@@ -39,18 +46,40 @@ public class MessageBusImpl implements MessageBus {
 	}
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-
-	   	for (Pair<? extends Message,Queue<MicroService>> pair :messageSubscribers){
-	          if(type.isInstance(pair.first))    {
-	          	pair.second.add(m);
+		boolean found= false;
+		for(Map.Entry< Class<?>,Queue<MicroService>> message : eventSubscribersMap.entrySet()){
+			if(type.isInstance(message.getKey())){
+				message.getValue().add(m);
+				found=true;
+				break;
 			}
+		}
+		if (!found)
+		{
+			BlockingQueue<MicroService> toInsert=new LinkedBlockingQueue<>();
+			toInsert.add(m);
+			eventSubscribersMap.put(type,toInsert);
+
 		}
 	}
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		// TODO Auto-generated method stub
+		boolean found= false;
+		for(Map.Entry< Class<?>,Queue<MicroService>> message : broadcastSubscribersMap.entrySet()){
+			if(type.isInstance(message.getKey())){
+				message.getValue().add(m);
+				found=true;
+				break;
+			}
+		}
+		if (!found)
+		{
+			BlockingQueue<MicroService> toInsert=new LinkedBlockingQueue<>();
+			toInsert.add(m);
+			broadcastSubscribersMap.put(type,toInsert);
 
+		}
 	}
 
 	@Override
@@ -61,20 +90,37 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
-		// TODO Auto-generated method stub
+		if(!broadcastSubscribersMap.containsKey(b.getClass()))
+			return;
 
+		Queue<MicroService>  microServices = broadcastSubscribersMap.get(b.getClass());
+		for (MicroService m:microServices) {
+			if (m != null) {
+				microServices.add(m);
+				queueMap.get(m).add(b);
+			}
+		}
 	}
 
 	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		// TODO Auto-generated method stub
+		if(!eventSubscribersMap.containsKey(e.getClass()))
+			return null;
+
+		Queue<MicroService>  microServices = eventSubscribersMap.get(e.getClass());
+		MicroService round= microServices.poll();
+		if (round==null)
+			return null;
+		microServices.add(round);
+		queueMap.get(round).add(e);
+
 		return null;
 	}
 
 	@Override
 	public void register(MicroService m) {
-		queueMap.put(m,new PriorityBlockingQueue<>());
+		queueMap.put(m,new LinkedBlockingQueue<>());
 
 	}
 
