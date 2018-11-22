@@ -20,6 +20,8 @@ public class MessageBusImpl implements MessageBus {
 	//private ConcurrentHashMap< Class<? extends Event<?>>,Queue<MicroService>> eventSubscribersMap;
 	private ConcurrentHashMap< Class<?>,Queue<MicroService>> eventSubscribersMap;
 	private ConcurrentHashMap< Class<?>,Queue<MicroService>> broadcastSubscribersMap;
+	private ConcurrentHashMap< Class<?>,Future<?>> futuresMap;
+
 	//private myVector<Pair<? extends Message, BlockingQueue<MicroService>>> messageSubscribers;
 
 
@@ -28,11 +30,11 @@ public class MessageBusImpl implements MessageBus {
 		this.queueMap=new ConcurrentHashMap<>();
 		this.eventSubscribersMap=new ConcurrentHashMap<>();
 		this.broadcastSubscribersMap=new ConcurrentHashMap<>();
+		this.futuresMap=new ConcurrentHashMap<>();
 
 		//messageSubscribers= new myVector<>();
-
-
 	}
+
 	public static MessageBus getInstance(){
 		MessageBus result= instance;
 		if (result==null) {
@@ -84,8 +86,8 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-		
 
+	futuresMap.get(e.getClass()).resolve(result);
 	}
 
 	@Override
@@ -114,8 +116,10 @@ public class MessageBusImpl implements MessageBus {
 			return null;
 		microServices.add(round);
 		queueMap.get(round).add(e);
+		Future <T> future=new Future<>();
+		futuresMap.put(e.getClass(),future);
 
-		return null;
+		return future;
 	}
 
 	@Override

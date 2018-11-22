@@ -33,12 +33,13 @@ public class Future<T> {
 	//ofir:to verify in kabala
 	public synchronized T get() {
 
-			if (resolved) {
-				return result;
-				else{
-				result.wait()=wait(Thread.currentThread(),result);
-				}
-		}
+		//	if (resolved) {
+			//	return result;
+			//	else{
+				//result.wait()=wait(Thread.currentThread(),result);
+		//		}
+		//}
+		return null;
 	}
 	
 	/**
@@ -62,7 +63,7 @@ public class Future<T> {
      * This method is non-blocking, it has a limited amount of time determined
      * by {@code timeout}
      * <p>
-     * @param timout 	the maximal amount of time units to wait for the result.
+   //  * @param timout 	the maximal amount of time units to wait for the result.
      * @param unit		the {@link TimeUnit} time units to wait.
      * @return return the result of type T if it is available, if not, 
      * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
@@ -75,6 +76,9 @@ public class Future<T> {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		if (resolved) return result;
+		if (resolved)
+			return result;
+		return null;
 	}
+
 }
