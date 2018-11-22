@@ -94,7 +94,7 @@ public abstract class MicroService implements Runnable {
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
      Future<T> f= msgBus.sendEvent(e);
-        return f; //TODO: delete this line :)
+        return f;
     }
 
     /**
@@ -104,7 +104,7 @@ public abstract class MicroService implements Runnable {
      * @param b The broadcast message to send
      */
     protected final void sendBroadcast(Broadcast b) {
-        //TODO: implement this.
+        msgBus.sendBroadcast(b);
     }
 
     /**
@@ -118,7 +118,7 @@ public abstract class MicroService implements Runnable {
      *               {@code e}.
      */
     protected final <T> void complete(Event<T> e, T result) {
-        //TODO: implement this.
+        msgBus.complete(e,result);
     }
 
     /**

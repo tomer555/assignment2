@@ -87,7 +87,8 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void complete(Event<T> e, T result) {
 
-	futuresMap.get(e.getClass()).resolve(result);
+	futuresMap.get(e.getClass()).resolve(result);//not compiling
+
 	}
 
 	@Override
@@ -136,8 +137,9 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
-		// TODO Auto-generated method stub
-		return null;
+		if(!queueMap.containsKey(m))
+			throw new InterruptedException();
+		return queueMap.get(m).poll();
 	}
 
 	
