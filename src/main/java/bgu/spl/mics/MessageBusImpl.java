@@ -1,7 +1,4 @@
 package bgu.spl.mics;
-
-import jdk.internal.net.http.common.Pair;
-
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,7 +84,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void complete(Event<T> e, T result) {
 
-	futuresMap.get(e.getClass()).resolve(result);//not compiling
+	//futuresMap.get(e.getClass()).resolve(result);//not compiling
 
 	}
 

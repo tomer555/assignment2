@@ -28,9 +28,12 @@ public class Future<T> {
      * not been completed.
      * <p>
      * @return return the result of type T if it is available, if not wait until it is available.
+	 * @pre: none
+	 * @post: resolved==true
+	 *
      * 	       
      */
-	//ofir:to verify in kabala
+
 	public synchronized T get() {
 
 		//	if (resolved) {
@@ -44,6 +47,11 @@ public class Future<T> {
 	
 	/**
      * Resolves the result of this Future object.
+	 * @pre: resolved==false
+	 * @pre: result==null
+	 * @post: resolved==true
+	 * @post: get()==result
+	 *
      */
 	public void resolve (T result) {
 		this.result=result;
@@ -52,6 +60,8 @@ public class Future<T> {
 	
 	/**
      * @return true if this object has been resolved, false otherwise
+	 * @pre none
+	 * @post none
      */
 	public boolean isDone() {
 
@@ -68,8 +78,11 @@ public class Future<T> {
      * @return return the result of type T if it is available, if not, 
      * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
      *         elapsed, return null.
+	 *
+	 * @pre: none
+	 * @post: none
      */
-	//ofir: ask in kabala
+
 	public synchronized T get(long timeout, TimeUnit unit) {
 		try {
 			wait(timeout);
@@ -79,6 +92,16 @@ public class Future<T> {
 		if (resolved)
 			return result;
 		return null;
+	}
+
+	/**
+	 * This Method created only for testing purposes!
+	 * @pre: none
+	 * @post: none
+	 * @return the current result
+	 */
+	public T getResult(){
+		return result;
 	}
 
 }
