@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 public class Future<T> {
 	private boolean resolved;
 	private T result;
+	private final Object resultLock;
+
 	
 	/**
 	 * This should be the the only public constructor in this class.
@@ -20,6 +22,7 @@ public class Future<T> {
 	public Future() {
 		resolved=false;
 		result=null;
+		resultLock=new Object();
 	}
 	
 	/**
@@ -34,15 +37,17 @@ public class Future<T> {
      * 	       
      */
 
-	public synchronized T get() {
-
-		//	if (resolved) {
-			//	return result;
-			//	else{
-				//result.wait()=wait(Thread.currentThread(),result);
-		//		}
-		//}
-		return null;
+	public T get() {
+		if (resolved)
+		    return result;
+		while (!resolved){
+            try {
+                resultLock.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
 	}
 	
 	/**
@@ -54,9 +59,13 @@ public class Future<T> {
 	 *
      */
 	public void resolve (T result) {
-		this.result=result;
-		resolved=true;
-	}
+        synchronized (resultLock) {
+            this.result = result;
+            resolved = true;
+            resultLock.notifyAll();
+            }
+        }
+
 	
 	/**
      * @return true if this object has been resolved, false otherwise
@@ -64,7 +73,6 @@ public class Future<T> {
 	 * @post none
      */
 	public boolean isDone() {
-
 		return resolved;
 	}
 	
@@ -83,16 +91,21 @@ public class Future<T> {
 	 * @post: none
      */
 
-	public synchronized T get(long timeout, TimeUnit unit) {
-		try {
-			wait(timeout);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		if (resolved)
-			return result;
-		return null;
-	}
+	public T get(long timeout, TimeUnit unit) {
+        long sleepMillis=unit.toMillis(timeout);
+        synchronized (resultLock) {
+            try {
+                resultLock.wait(sleepMillis);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if(resolved)
+            return result;
+        else
+            return null;
+    }
+
 
 	/**
 	 * This Method created only for testing purposes!
