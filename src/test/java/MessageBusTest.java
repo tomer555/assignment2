@@ -14,7 +14,7 @@ public class MessageBusTest {
     private MessageBus bus;
 
     @Before
-    protected void setUp() throws Exception {
+    protected void setUp() {
         this.bus = createBus();
     }
 

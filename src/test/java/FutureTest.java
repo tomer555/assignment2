@@ -36,7 +36,6 @@ public class FutureTest {
      */
     @Test
     public void resolve() {
-        Assert.assertNull(future.get(1,TimeUnit.SECONDS));
         Assert.assertFalse(future.isDone());
         Integer i3= 9;
         future.resolve(i3);
@@ -78,7 +77,7 @@ public class FutureTest {
         try {
             t1.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            fail(e.getMessage());
         }
         Integer result2=future.getResult();
         Assert.assertEquals(i4,result2);
