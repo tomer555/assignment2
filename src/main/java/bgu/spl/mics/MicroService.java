@@ -1,5 +1,7 @@
 package bgu.spl.mics;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * The MicroService is an abstract class that any micro-service in the system
  * must extend. The abstract MicroService class is responsible to get and
@@ -23,12 +25,14 @@ public abstract class MicroService implements Runnable {
     private boolean terminated = false;
     private final String name;
     private MessageBus msgBus=null;
+    private ConcurrentHashMap<Class<?>,Callback<?>> callbacks;
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
      *             does not have to be unique)
      */
     public MicroService(String name) {
         this.name = name;
+        callbacks=new ConcurrentHashMap<>();
     }
 
     /**
@@ -53,7 +57,8 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
-        //TODO: implement this.
+        msgBus.subscribeEvent(type,this);
+        callbacks.put(type,callback);
     }
 
     /**
@@ -77,7 +82,8 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
-        //TODO: implement this.
+        msgBus.subscribeBroadcast(type,this);
+        callbacks.put(type,callback);
     }
 
     /**
@@ -93,8 +99,7 @@ public abstract class MicroService implements Runnable {
      * 	       			null in case no micro-service has subscribed to {@code e.getClass()}.
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
-     Future<T> f= msgBus.sendEvent(e);
-        return f;
+        return msgBus.sendEvent(e);
     }
 
     /**
@@ -143,17 +148,22 @@ public abstract class MicroService implements Runnable {
     }
 
     /**
-     * The entry point of the micro-service. TODO: you must complete this code
+     * The entry point of the micro-service.
      * otherwise you will end up in an infinite loop.
      */
     @Override
     public final void run() {
-        initialize();
         msgBus=MessageBusImpl.getInstance();
+        msgBus.register(this);
+        initialize();
         while (!terminated) {
-            System.out.println("NOT IMPLEMENTED!!!");
-
-
+            try {
+                Message m=msgBus.awaitMessage(this);
+                Thread thread=new Thread((Runnable) callbacks.get(m));
+                thread.start();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         msgBus.unregister(this);
     }

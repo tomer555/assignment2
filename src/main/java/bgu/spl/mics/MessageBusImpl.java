@@ -13,12 +13,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class MessageBusImpl implements MessageBus {
 
 	private static volatile MessageBus instance = null;
-	private static Object o = new Object();
+	private static final Object o = new Object();
 	private ConcurrentHashMap<MicroService,Queue<Message>> queueMap;
 	private ConcurrentHashMap<Class<?>, Queue<MicroService>> messageSubscribersMap;
-	private ConcurrentHashMap<Event<?>, Future<?>> futuresMap;
+	private ConcurrentHashMap<Event<?>,Future<?>> futuresMap;
 
-	//private myVector<Pair<? extends Message, BlockingQueue<MicroService>>> messageSubscribers;
 
 
 	//A Thread safe constructor
@@ -27,7 +26,6 @@ public class MessageBusImpl implements MessageBus {
 		this.messageSubscribersMap = new ConcurrentHashMap<>();
 		this.futuresMap = new ConcurrentHashMap<>();
 
-		//messageSubscribers= new myVector<>();
 	}
 
 	public static MessageBus getInstance() {
@@ -64,7 +62,7 @@ public class MessageBusImpl implements MessageBus {
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
 		boolean found = false;
 		for (Map.Entry<Class<?>, Queue<MicroService>> message : messageSubscribersMap.entrySet()) {
-			if (type.isInstance(message.getKey())) {
+			if (message.getKey()== type) {
 				message.getValue().add(m);
 				found = true;
 				break;
@@ -80,7 +78,8 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-		Future future= futuresMap.get(e);
+
+		Future<T> future=(Future<T>)futuresMap.get(e);
 		future.resolve(result);
 	}
 
@@ -92,8 +91,11 @@ public class MessageBusImpl implements MessageBus {
 		Queue<MicroService> microServices = messageSubscribersMap.get(b.getClass());
 		for (MicroService m : microServices) {
 			if (m != null) {
-				microServices.add(m);
 				queueMap.get(m).add(b);
+				synchronized (queueMap.get(m)) {
+					queueMap.get(m).notifyAll();
+				}
+
 			}
 		}
 	}
@@ -111,7 +113,7 @@ public class MessageBusImpl implements MessageBus {
 		microServices.add(round);
 		queueMap.get(round).add(e);
 		Future<T> future = new Future<>();
-		futuresMap.put(e.getClass(), future);
+		futuresMap.put(e, future);
 
 		return future;
 	}
@@ -134,7 +136,9 @@ public class MessageBusImpl implements MessageBus {
 			throw new InterruptedException();
 		Queue<Message> microMessages = queueMap.get(m);
 		while (microMessages.isEmpty())
-			queueMap.get(m).wait();
+			synchronized (queueMap.get(m)) {
+				queueMap.get(m).wait();
+			}
 		return microMessages.poll();
 	}
 }

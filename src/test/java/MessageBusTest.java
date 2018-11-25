@@ -1,6 +1,9 @@
 
 import java.lang.reflect.*;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+
 import bgu.spl.mics.*;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 import bgu.spl.mics.example.messages.ExampleEvent;
@@ -36,7 +39,7 @@ public class MessageBusTest {
         this.bus = createBus();//Create MessageBus
 
         //Create MicroServices
-        this.broadcastListener=new ExampleBroadcastListenerService("brod1",new String[] {"2"});
+        this.broadcastListener=new ExampleBroadcastListenerService("brod0",new String[] {"2"});
         this.eventHandler=new ExampleEventHandlerService("event1",new String[] {"1"});
         this.messageHandler=new ExampleMessageSenderService("message1",new String[] {"event"});
 
@@ -47,7 +50,7 @@ public class MessageBusTest {
     protected void InitializeFields() throws ClassNotFoundException, NoSuchFieldException {
         this.queueMap=Class.forName("bgu.spl.mics.MessageBusImpl").getDeclaredField("queueMap");
         this.messageSubscribersMap=Class.forName("bgu.spl.mics.MessageBusImpl").getDeclaredField("messageSubscribersMap");
-        this.queueMap=Class.forName("bgu.spl.mics.MessageBusImpl").getDeclaredField("futuresMap");
+        this.futuresMap=Class.forName("bgu.spl.mics.MessageBusImpl").getDeclaredField("futuresMap");
     }
 
     protected MessageBus createBus() {
@@ -96,9 +99,9 @@ public class MessageBusTest {
             futuresMap.setAccessible(true);
             ConcurrentHashMap hashMap = (ConcurrentHashMap)futuresMap.get(bus);
             Message m1=new ExampleEvent("sender1");
-            hashMap.put(m1,future);
+            //hashMap.put(m1,future); warning!!!
             Integer i=1;
-            bus.complete(m1,i.);
+            //bus.complete(m1,i);  //compilition error
         } catch (IllegalAccessException e) {
             fail(e.getMessage());
         }
@@ -106,10 +109,54 @@ public class MessageBusTest {
 
     @Test
     public void sendBroadcast() {
+
+        MicroService m1=new ExampleBroadcastListenerService("brod1",new String[] {"2"});
+        MicroService m2=new ExampleBroadcastListenerService("brod2",new String[] {"2"});
+        bus.register(m1);
+        bus.register(m2);
+        bus.subscribeBroadcast(ExampleBroadcast.class,m1);
+        bus.subscribeBroadcast(ExampleBroadcast.class,m2);
+
+        Broadcast brodcast=new ExampleBroadcast("test");
+        bus.sendBroadcast(brodcast);
+        try {
+            queueMap.setAccessible(true);
+            ConcurrentHashMap hashMap = (ConcurrentHashMap)queueMap.get(bus);
+            Queue queue1= (Queue) hashMap.get(m1);
+            Queue queue2= (Queue) hashMap.get(m2);
+            Assert.assertTrue(queue1.contains(brodcast));
+            Assert.assertTrue(queue2.contains(brodcast));
+
+        } catch (IllegalAccessException e) {
+            fail(e.getMessage());
+        }
     }
 
+
+
+
+
+
+
+    /**
+     * This is a Unit Test for the {@link MessageBus#sendEvent(Event)} interface.
+     *
+     * */
     @Test
     public void sendEvent() {
+       bus.register(messageHandler);
+       bus.subscribeEvent(ExampleEvent.class,messageHandler);
+       Event<String> m=new ExampleEvent("test") ;
+       bus.sendEvent(m);
+        try {
+            queueMap.setAccessible(true);
+            ConcurrentHashMap hashMap = (ConcurrentHashMap)queueMap.get(bus);
+            Queue queue= (Queue) hashMap.get(messageHandler);
+            Assert.assertTrue(queue.contains(m));
+
+        } catch (IllegalAccessException e) {
+            fail(e.getMessage());
+        }
     }
 
     /**
@@ -155,5 +202,20 @@ public class MessageBusTest {
 
     @Test
     public void awaitMessage() {
+        MicroService m2=new ExampleBroadcastListenerService("brod2",new String[] {"2"});
+        bus.register(m2);
+        bus.subscribeBroadcast(ExampleBroadcast.class,m2);
+        AtomicReference<Message> message=new AtomicReference<>();
+        Thread t1=new Thread(()-> {
+            try {
+                message.set(bus.awaitMessage(m2));
+            } catch (InterruptedException e) {
+                fail(e.getMessage());
+            }
+        });
+        t1.start();
+        Broadcast brodcast=new ExampleBroadcast("test");
+        bus.sendBroadcast(brodcast);
+        Assert.assertEquals(brodcast,message.get());
     }
 }
