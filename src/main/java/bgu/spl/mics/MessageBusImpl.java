@@ -79,9 +79,11 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void complete(Event<T> e, T result) {
 
-		Future<T> future=(Future<T>)futuresMap.get(e);
+		Future <T> future= (Future<T>) futuresMap.get(e);
 		future.resolve(result);
 	}
+
+
 
 	@Override
 	public void sendBroadcast(Broadcast b) {

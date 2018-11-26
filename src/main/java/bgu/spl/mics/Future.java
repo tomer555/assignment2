@@ -105,16 +105,4 @@ public class Future<T> {
         else
             return null;
     }
-
-
-	/**
-	 * This Method created only for testing purposes!
-	 * @pre: none
-	 * @post: none
-	 * @return the current result
-	 */
-	public T getResult(){
-		return result;
-	}
-
 }

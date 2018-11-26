@@ -2,6 +2,8 @@ import bgu.spl.mics.Future;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.*;
 
@@ -9,10 +11,13 @@ import static org.junit.Assert.*;
 
 public class FutureTest {
     private Future<Integer> future;
+    private Field cuurentResult;
 
     @Before
-    public void setUp(){
+    public void setUp() throws ClassNotFoundException, NoSuchFieldException {
         this.future = createFuture();
+        this.cuurentResult=Class.forName("bgu.spl.mics.Future").getDeclaredField("result");
+        cuurentResult.setAccessible(true);
     }
 
 
@@ -79,7 +84,13 @@ public class FutureTest {
         } catch (InterruptedException e) {
             fail(e.getMessage());
         }
-        Integer result2=future.getResult();
+        Integer result2= null ;
+        try {
+            result2 =(Integer) cuurentResult.get(future);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
         Assert.assertEquals(i4,result2);
     }
 
@@ -108,7 +119,13 @@ public class FutureTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Integer result2=future.getResult();
+        Integer result2= null;
+        try {
+            result2 = (Integer) cuurentResult.get(future);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        ;
         Assert.assertNull(result2);
     }
 
@@ -120,9 +137,18 @@ public class FutureTest {
      */
     @Test
     public void getResult() {
-        Assert.assertNull(future.getResult());
+        try {
+            Assert.assertNull(cuurentResult.get(future));
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
         Integer i5 =5;
         future.resolve(i5);
-        Assert.assertEquals(i5,future.getResult());
+        try {
+            Assert.assertEquals(i5, cuurentResult.get(future));
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 }
