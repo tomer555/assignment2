@@ -1,6 +1,10 @@
 package bgu.spl.mics.application.passiveObjects;
-
-
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing the store finance management. 
@@ -12,14 +16,29 @@ package bgu.spl.mics.application.passiveObjects;
  * You can add ONLY private fields and methods to this class as you see fit.
  */
 public class MoneyRegister {
-	
+	private static volatile MoneyRegister instance = null;
+	private static final Object lockRegister = new Object();
+	private List<OrderReceipt> orderReceiptList;
+	private AtomicInteger earnings;
+	private MoneyRegister(){
+		this.earnings=new AtomicInteger(0);
+		this.orderReceiptList=new LinkedList<>();
+	}
 	/**
      * Retrieves the single instance of this class.
      */
 	public static MoneyRegister getInstance() {
-		//TODO: Implement this
-		return null;
+		MoneyRegister result = instance;
+		if (result == null) {
+			synchronized (lockRegister) {
+				result = instance;
+				if (result == null)
+					instance = result = new MoneyRegister();
+			}
+		}
+		return result;
 	}
+
 	
 	/**
      * Saves an order receipt in the money register.
@@ -27,16 +46,13 @@ public class MoneyRegister {
      * @param r		The receipt to save in the money register.
      */
 	public void file (OrderReceipt r) {
-		//TODO: Implement this.
+		orderReceiptList.add(r);
 	}
 	
 	/**
      * Retrieves the current total earnings of the store.  
      */
-	public int getTotalEarnings() {
-		//TODO: Implement this
-		return 0;
-	}
+	public int getTotalEarnings() {return earnings.get(); }
 	
 	/**
      * Charges the credit card of the customer a certain amount of money.
@@ -44,7 +60,13 @@ public class MoneyRegister {
      * @param amount 	amount to charge
      */
 	public void chargeCreditCard(Customer c, int amount) {
-		// TODO Implement this
+		//should we add a check if the customer has enough money???
+		if(c.getAvailableCreditAmount()<amount) {
+			//throw some exception
+		}
+		//maybe we should do Atomic compare and set
+		c.setAvailableCreditAmount(amount);
+		earnings.set(earnings.intValue()+amount);
 	}
 	
 	/**
@@ -53,6 +75,14 @@ public class MoneyRegister {
      * This method is called by the main method in order to generate the output.. 
      */
 	public void printOrderReceipts(String filename) {
-		//TODO: Implement this
+		try{
+			FileOutputStream fileOut=new FileOutputStream(filename+".txt");
+			ObjectOutputStream out =new ObjectOutputStream(fileOut);
+			out.writeObject(orderReceiptList);
+			out.close();
+			fileOut.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

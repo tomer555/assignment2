@@ -2,6 +2,12 @@ package bgu.spl.mics.application.passiveObjects;
 
 import bgu.spl.mics.Future;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 /**
  * Passive object representing the resource manager.
  * You must not alter any of the given public methods of this class.
@@ -12,14 +18,29 @@ import bgu.spl.mics.Future;
  * You can add ONLY private methods and fields to this class.
  */
 public class ResourcesHolder {
-	
+	private static volatile ResourcesHolder instance = null;
+	private static final Object lockResource = new Object();
+	private BlockingQueue<DeliveryVehicle> carsQueue;
+
+	private ResourcesHolder(){
+		this.carsQueue=new LinkedBlockingQueue<>();
+	}
 	/**
      * Retrieves the single instance of this class.
      */
 	public static ResourcesHolder getInstance() {
-		//TODO: Implement this
-		return null;
+		ResourcesHolder result = instance;
+		if (result == null) {
+			synchronized (lockResource) {
+				result = instance;
+				if (result == null)
+					instance = result = new ResourcesHolder();
+			}
+		}
+		return result;
 	}
+
+
 	
 	/**
      * Tries to acquire a vehicle and gives a future object which will
@@ -29,8 +50,9 @@ public class ResourcesHolder {
      * 			{@link DeliveryVehicle} when completed.   
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
+		//should we actually try to find a car
 		//TODO: Implement this
-		return null;
+		return new Future<>();
 	}
 	
 	/**
@@ -40,7 +62,7 @@ public class ResourcesHolder {
      * @param vehicle	{@link DeliveryVehicle} to be released.
      */
 	public void releaseVehicle(DeliveryVehicle vehicle) {
-		//TODO: Implement this
+		carsQueue.add(vehicle);
 	}
 	
 	/**
@@ -49,7 +71,7 @@ public class ResourcesHolder {
      * @param vehicles	Array of {@link DeliveryVehicle} instances to store.
      */
 	public void load(DeliveryVehicle[] vehicles) {
-		//TODO: Implement this
+		Collections.addAll(carsQueue,vehicles);
 	}
 
 }

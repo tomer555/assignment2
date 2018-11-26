@@ -7,29 +7,26 @@ package bgu.spl.mics.application.passiveObjects;
  * You may add ONLY private fields and methods to this class.
  */
 public class DeliveryVehicle {
+	private int license;
+	private int speed;
 	/**
      * Constructor.   
      */
 	 public DeliveryVehicle(int license, int speed) {
-		// TODO Implement this
+		this.license=license;
+		this.speed=speed;
 	  }
 	/**
      * Retrieves the license of this delivery vehicle.   
      */
-	public int getLicense() {
-		// TODO Implement this
-		return 0;
-	}
+	public int getLicense() { return license; }
 	
 	/**
      * Retrieves the speed of this vehicle person.   
      * <p>
      * @return Number of ticks needed for 1 Km.
      */
-	public int getSpeed() {
-		// TODO Implement this
-		return 0;
-	}
+	public int getSpeed() { return speed; }
 	
 	/**
      * Simulates a delivery by sleeping for the amount of time that 

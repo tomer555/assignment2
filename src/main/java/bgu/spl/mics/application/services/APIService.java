@@ -1,6 +1,13 @@
 package bgu.spl.mics.application.services;
-
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.BookOrderEvent;
+import bgu.spl.mics.application.passiveObjects.Inventory;
+import bgu.spl.mics.application.passiveObjects.MoneyRegister;
+import bgu.spl.mics.application.passiveObjects.OrderReceipt;
+import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * APIService is in charge of the connection between a client and the store.
@@ -12,15 +19,15 @@ import bgu.spl.mics.MicroService;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class APIService extends MicroService{
-
-	public APIService() {
-		super("Change_This_Name");
-		// TODO Implement this
+	private List<OrderReceipt> orderSchedule;
+	public APIService(String name,List<OrderReceipt> orderSchedule) {
+		super(name);
+		orderSchedule=new LinkedList<>();
 	}
 
 	@Override
 	protected void initialize() {
-		// TODO Implement this
+		sendEvent();
 		
 	}
 
