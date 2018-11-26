@@ -16,7 +16,7 @@ public class MessageBusImpl implements MessageBus {
 	private static final Object o = new Object();
 	private ConcurrentHashMap<MicroService,Queue<Message>> queueMap;
 	private ConcurrentHashMap<Class<?>, Queue<MicroService>> messageSubscribersMap;
-	private ConcurrentHashMap<Event<?>,Future<?>> futuresMap;
+	private ConcurrentHashMap<Event,Future> futuresMap;
 
 
 
@@ -79,7 +79,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void complete(Event<T> e, T result) {
 
-		Future <T> future= (Future<T>) futuresMap.get(e);
+		Future<T>  future= (Future<T>) futuresMap.get(e);
 		future.resolve(result);
 	}
 
@@ -93,11 +93,11 @@ public class MessageBusImpl implements MessageBus {
 		Queue<MicroService> microServices = messageSubscribersMap.get(b.getClass());
 		for (MicroService m : microServices) {
 			if (m != null) {
-				queueMap.get(m).add(b);
-				synchronized (queueMap.get(m)) {
-					queueMap.get(m).notifyAll();
+				synchronized (m) {
+					System.out.println("broadcast deliverd");
+					queueMap.get(m).add(b);
+					m.notifyAll();
 				}
-
 			}
 		}
 	}
@@ -114,8 +114,11 @@ public class MessageBusImpl implements MessageBus {
 			return null;
 		microServices.add(round);
 		queueMap.get(round).add(e);
-		Future<T> future = new Future<>();
-		futuresMap.put(e, future);
+		synchronized (round) {
+			round.notifyAll();
+		}
+			Future<T> future = new Future<>();
+			futuresMap.put(e, future);
 
 		return future;
 	}
@@ -138,8 +141,8 @@ public class MessageBusImpl implements MessageBus {
 			throw new InterruptedException();
 		Queue<Message> microMessages = queueMap.get(m);
 		while (microMessages.isEmpty())
-			synchronized (queueMap.get(m)) {
-				queueMap.get(m).wait();
+			synchronized (m) {
+				m.wait();
 			}
 		return microMessages.poll();
 	}

@@ -3,7 +3,6 @@ import java.lang.reflect.*;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-
 import bgu.spl.mics.*;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 import bgu.spl.mics.example.messages.ExampleEvent;
@@ -94,14 +93,14 @@ public class MessageBusTest {
      * */
     @Test
     public void complete() {
-        Future<Integer> future=new Future<>();
+        Future<String> future=new Future<>();
         try {
             futuresMap.setAccessible(true);
             ConcurrentHashMap hashMap = (ConcurrentHashMap)futuresMap.get(bus);
-            Message m1=new ExampleEvent("sender1");
-            //hashMap.put(m1,future); warning!!!
-            Integer i=1;
-            //bus.complete(m1,i);  //compilition error
+            ExampleEvent m1=new ExampleEvent("sender1");
+            hashMap.put(m1,future);
+            String i="1";
+            bus.complete(m1,i);
         } catch (IllegalAccessException e) {
             fail(e.getMessage());
         }
@@ -203,19 +202,18 @@ public class MessageBusTest {
     @Test
     public void awaitMessage() {
         MicroService m2=new ExampleBroadcastListenerService("brod2",new String[] {"2"});
-        bus.register(m2);
-        bus.subscribeBroadcast(ExampleBroadcast.class,m2);
         AtomicReference<Message> message=new AtomicReference<>();
-        Thread t1=new Thread(()-> {
-            try {
-                message.set(bus.awaitMessage(m2));
-            } catch (InterruptedException e) {
-                fail(e.getMessage());
-            }
-        });
+        Thread t1=new Thread(()->m2.run());
+        Thread t2=new Thread(()->{
+            Broadcast brodcast=new ExampleBroadcast("test");
+            bus.sendBroadcast(brodcast);});
+
         t1.start();
-        Broadcast brodcast=new ExampleBroadcast("test");
-        bus.sendBroadcast(brodcast);
-        Assert.assertEquals(brodcast,message.get());
+
+        t2.start();
+
+
+
+
     }
 }

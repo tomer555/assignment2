@@ -11,13 +11,13 @@ import static org.junit.Assert.*;
 
 public class FutureTest {
     private Future<Integer> future;
-    private Field cuurentResult;
+    private Field currentResult;
 
     @Before
     public void setUp() throws ClassNotFoundException, NoSuchFieldException {
         this.future = createFuture();
-        this.cuurentResult=Class.forName("bgu.spl.mics.Future").getDeclaredField("result");
-        cuurentResult.setAccessible(true);
+        this.currentResult =Class.forName("bgu.spl.mics.Future").getDeclaredField("result");
+        currentResult.setAccessible(true);
     }
 
 
@@ -86,7 +86,7 @@ public class FutureTest {
         }
         Integer result2= null ;
         try {
-            result2 =(Integer) cuurentResult.get(future);
+            result2 =(Integer) currentResult.get(future);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -121,34 +121,11 @@ public class FutureTest {
         }
         Integer result2= null;
         try {
-            result2 = (Integer) cuurentResult.get(future);
+            result2 = (Integer) currentResult.get(future);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
         ;
         Assert.assertNull(result2);
-    }
-
-
-
-
-    /**
-     *Test Query Method for {@link Future#getResult()}  For test purposes only!
-     */
-    @Test
-    public void getResult() {
-        try {
-            Assert.assertNull(cuurentResult.get(future));
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        Integer i5 =5;
-        future.resolve(i5);
-        try {
-            Assert.assertEquals(i5, cuurentResult.get(future));
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
     }
 }

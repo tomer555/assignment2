@@ -156,9 +156,11 @@ public abstract class MicroService implements Runnable {
         msgBus=MessageBusImpl.getInstance();
         msgBus.register(this);
         initialize();
+        System.out.println("1");
         while (!terminated) {
             try {
                 Message m=msgBus.awaitMessage(this);
+                System.out.println("2");
                 Thread thread=new Thread((Runnable) callbacks.get(m));
                 thread.start();
             } catch (InterruptedException e) {
