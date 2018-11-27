@@ -29,6 +29,7 @@ public class InventoryService extends MicroService {
 
 	@Override
 	protected void initialize() {
+
 		subscribeEvent(CheckAvailabilityEvent.class, ev -> {
 			Integer bookPrice = inventory.checkAvailabiltyAndGetPrice(ev.getBookTitle());
 			complete(ev, bookPrice);

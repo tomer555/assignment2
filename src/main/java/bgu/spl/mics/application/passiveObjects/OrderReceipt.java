@@ -19,15 +19,11 @@ public class OrderReceipt implements Serializable {
 	private int orderTick;
 	private int processTick;
 
-	public OrderReceipt(int orderId,String seller,int customerId,String bookTitle,int price,int issuedTick,int orderTick,int processTick){
+	public OrderReceipt(int orderId,int customerId,String bookTitle,int orderTick){
 		this.orderId=orderId;
-		this.seller=seller;
 		this.customerId=customerId;
 		this.bookTitle=bookTitle;
-		this.price=price;
-		this.issuedTick=issuedTick;
 		this.orderTick=orderTick;
-		this.processTick=processTick;
 	}
 	/**
      * Retrieves the orderId of this receipt.
@@ -38,7 +34,11 @@ public class OrderReceipt implements Serializable {
      * Retrieves the name of the selling service which handled the order.
      */
 	public String getSeller() { return seller;}
-	
+
+
+	public void setSeller(String seller){
+		this.seller=seller;
+	}
 	/**
      * Retrieves the ID of the customer to which this receipt is issued to.
      * <p>
@@ -60,15 +60,39 @@ public class OrderReceipt implements Serializable {
      * Retrieves the tick in which this receipt was issued.
      */
 	public int getIssuedTick() { return issuedTick;}
+
+	public void setIssuedTick(int issuedTick) {
+		this.issuedTick=issuedTick;
+	}
 	
 	/**
      * Retrieves the tick in which the customer sent the purchase request.
      */
 	public int getOrderTick() { return orderTick;}
+
+
+	public void setOrderTick(int orderTick) {
+		this.orderTick=orderTick;
+	}
 	
 	/**
      * Retrieves the tick in which the treating selling service started 
      * processing the order.
      */
 	public int getProcessTick() { return processTick;}
+
+
+	public void setProcessTick(int processTick) {
+		this.processTick=processTick;
+	}
+
+	public void setPrice(int price){
+		this.price=price;
+	}
+
+	public void setOrderId(int orderId){
+		this.orderTick=orderId;
+	}
+
+
 }

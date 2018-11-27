@@ -43,6 +43,8 @@ public class TimeService extends MicroService{
 				ticks++;
 			}
 		};
+
+
 		timer.scheduleAtFixedRate(timerTask,0,speed);
 	}
 

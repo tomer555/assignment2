@@ -23,6 +23,7 @@ public class SellingService extends MicroService{
 	public SellingService(String name,MoneyRegister moneyRegister) {
 		super(name);
 		this.moneyRegister=moneyRegister;
+		this.currentTick=1;
 	}
 
 	@Override
@@ -31,30 +32,32 @@ public class SellingService extends MicroService{
 
 		//Subscribe to TickBroadcast
 		subscribeBroadcast(TickBroadcast.class,message->{
-
-
+			currentTick=message.getCurrentTick();
 		});
 
 
 		//Subscribe to BookOrderEvent
 		subscribeEvent(BookOrderEvent.class, ev -> {
+			OrderReceipt receipt=ev.getOrder();
+			receipt.setProcessTick(currentTick);
+			receipt.setSeller(getName());
 			String bookTitle=ev.getOrder().getBookTitle();
 			Customer customer=ev.getCustomer();
 			Future<Integer> bookPriceFuture=sendEvent(new CheckAvailabilityEvent(bookTitle));
 			int bookPrice=bookPriceFuture.get();
+			receipt.setPrice(bookPrice);
 
 			if(bookPrice!=-1 && customer.getAvailableCreditAmount()>=bookPrice){
-				moneyRegister.chargeCreditCard(customer,bookPrice);
 				Future<OrderResult> acquireBookFuture=sendEvent(new AcquireBookEvent(bookTitle));
 				OrderResult acquireBook=acquireBookFuture.get();
 				if(acquireBook==OrderResult.SUCCESSFULLY_TAKEN){
-					//should make order receipt and complete
+					moneyRegister.chargeCreditCard(customer,bookPrice);
+					receipt.setIssuedTick(currentTick);
+					moneyRegister.file(receipt);
 				}
-
 				else{
 					complete(ev,null);
 				}
-
 			}
 			else
 				complete(ev,null);

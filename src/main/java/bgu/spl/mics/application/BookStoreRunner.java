@@ -5,6 +5,8 @@ package bgu.spl.mics.application;
  * In the end, you should output serialized objects.
  */
 public class BookStoreRunner {
+    private int orderId=0;
     public static void main(String[] args) {
+
     }
 }

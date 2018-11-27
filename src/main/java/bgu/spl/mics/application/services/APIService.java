@@ -2,13 +2,12 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BookOrderEvent;
-import bgu.spl.mics.application.passiveObjects.Inventory;
-import bgu.spl.mics.application.passiveObjects.MoneyRegister;
-import bgu.spl.mics.application.passiveObjects.OrderReceipt;
-import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
-
+import bgu.spl.mics.application.passiveObjects.*;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Stream;
 
 /**
  * APIService is in charge of the connection between a client and the store.
@@ -21,16 +20,51 @@ import java.util.List;
  */
 public class APIService extends MicroService{
 	private List<OrderReceipt> orderSchedule;
-	public APIService(String name,List<OrderReceipt> orderSchedule) {
+	private List<Future<OrderReceipt>> orderReceiptFutures;
+	private BlockingQueue<Future<OrderReceipt>> doneReceiptFutures;
+	private Customer customer;
+	public APIService(String name, List<OrderReceipt> orderSchedule, Customer customer) {
 		super(name);
 		orderSchedule=new LinkedList<>();
+		this.orderReceiptFutures=new LinkedList<>();
+		this.doneReceiptFutures=new LinkedBlockingQueue<>();
+		this.customer=customer;
 	}
 
 	@Override
 	protected void initialize() {
+		orderSchedule.sort((order1,order2)->{
+			if (order1.getOrderTick()<order2.getOrderTick())
+				return 1;
+			else
+				return 0;
+		});
+		for (OrderReceipt order:orderSchedule) {
+			Future<OrderReceipt> orderFuture = sendEvent(new BookOrderEvent(order, customer));
+			orderReceiptFutures.add(orderFuture);
+		}
+		Thread doneFutures=new Thread(()->{
+			while (!orderReceiptFutures.isEmpty()){
+				Stream<Future<OrderReceipt>> stream=orderReceiptFutures.stream();
+				stream.filter(Future::isDone).forEach((future)->{
+					doneReceiptFutures.add(future);
+					orderReceiptFutures.remove(future);
+				});
+			}
+		});
 
-		//Tick logic
-		Future<OrderReceipt> bookOrder;
+		doneFutures.start();
+		while (!orderReceiptFutures.isEmpty()){
+			Future<OrderReceipt> readyRecipt= doneReceiptFutures.poll();
+
+		}
+
+
+
+
+
+
+
 		
 	}
 

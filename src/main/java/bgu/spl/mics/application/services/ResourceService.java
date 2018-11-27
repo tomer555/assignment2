@@ -1,6 +1,10 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.AcquireCarEvent;
+import bgu.spl.mics.application.messages.DeliveryEvent;
+import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
@@ -23,7 +27,12 @@ public class ResourceService extends MicroService{
 
 	@Override
 	protected void initialize() {
-		// TODO Implement this
+		subscribeEvent(AcquireCarEvent.class,ev->{
+			Future <DeliveryVehicle> deliveryVehicleFuture=resourcesHolder.acquireVehicle();
+			complete(ev,deliveryVehicleFuture.get());
+
+
+		});
 		
 	}
 
