@@ -32,11 +32,12 @@ public class ResourceService extends MicroService{
 			DeliveryVehicle deliveryVehicle= deliveryVehicleFuture.get();
 			complete(ev,deliveryVehicle);
 
-
-
-
-
 		});
+
+		subscribeEvent(ReturnCarEvent.class,ev->{
+			resourcesHolder.releaseVehicle(ev.getCarToReturn());
+		});
+
 		
 	}
 

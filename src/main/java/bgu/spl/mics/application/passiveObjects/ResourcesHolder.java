@@ -47,16 +47,10 @@ public class ResourcesHolder {
      * 			{@link DeliveryVehicle} when completed.   
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
-		Future<DeliveryVehicle> output = new Future<>();
-		/*
-		if() {//completely free car
-			output.resolve();// someFreeCar inside
-			//delete car
-		}
-		else
-			return new Future<>();
-			*/
-	return null;
+		DeliveryVehicle vehicle=carsQueue.poll();
+		Future<DeliveryVehicle> future=new Future<>();
+		future.resolve(vehicle);
+		return future;
 	}
 	
 	/**

@@ -5,6 +5,7 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireCarEvent;
 import bgu.spl.mics.application.messages.BookOrderEvent;
 import bgu.spl.mics.application.messages.DeliveryEvent;
+import bgu.spl.mics.application.messages.ReturnCarEvent;
 import bgu.spl.mics.application.passiveObjects.*;
 
 /**
@@ -31,6 +32,7 @@ public class LogisticsService extends MicroService {
 			Customer customer=ev.getCustomer();
 			Thread driver =new Thread(()-> {
 				car.deliver(customer.getAddress(), customer.getDistance());
+				sendEvent(new ReturnCarEvent(car));
 			});
 			driver.start();
 
