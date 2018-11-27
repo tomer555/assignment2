@@ -1,12 +1,13 @@
 package bgu.spl.mics.application.services;
-
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.BookOrderEvent;
+import bgu.spl.mics.application.messages.AcquireBookEvent;
+import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
+import bgu.spl.mics.application.passiveObjects.OrderResult;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
-import java.util.Base64;
+
 
 /**
  * InventoryService is in charge of the book inventory and stock.
@@ -18,21 +19,25 @@ import java.util.Base64;
  * You MAY change constructor signatures and even add new public constructors.
  */
 
-public class InventoryService extends MicroService{
+public class InventoryService extends MicroService {
 	private Inventory inventory;
+
 	public InventoryService(String name, Inventory inventory) {
 		super(name);
-		this.inventory=inventory;
+		this.inventory = inventory;
 	}
 
 	@Override
 	protected void initialize() {
-		subscribeEvent(BookOrderEvent.class,ev->{
-			
-
-
+		subscribeEvent(CheckAvailabilityEvent.class, ev -> {
+			Integer bookPrice = inventory.checkAvailabiltyAndGetPrice(ev.getBookTitle());
+			complete(ev, bookPrice);
 		});
-		
+
+		subscribeEvent(AcquireBookEvent.class,ev->{
+			OrderResult bookTaken =inventory.take(ev.getBookTitle());
+			complete(ev,bookTaken);
+		});
 	}
 
 }
