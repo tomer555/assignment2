@@ -4,6 +4,7 @@ import bgu.spl.mics.application.messages.AcquireBookEvent;
 import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BookOrderEvent;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.*;
 
 /**
@@ -18,6 +19,7 @@ import bgu.spl.mics.application.passiveObjects.*;
  */
 public class SellingService extends MicroService{
 	private MoneyRegister moneyRegister;
+	private int currentTick;
 	public SellingService(String name,MoneyRegister moneyRegister) {
 		super(name);
 		this.moneyRegister=moneyRegister;
@@ -25,6 +27,16 @@ public class SellingService extends MicroService{
 
 	@Override
 	protected void initialize() {
+
+
+		//Subscribe to TickBroadcast
+		subscribeBroadcast(TickBroadcast.class,message->{
+
+
+		});
+
+
+		//Subscribe to BookOrderEvent
 		subscribeEvent(BookOrderEvent.class, ev -> {
 			String bookTitle=ev.getOrder().getBookTitle();
 			Customer customer=ev.getCustomer();
