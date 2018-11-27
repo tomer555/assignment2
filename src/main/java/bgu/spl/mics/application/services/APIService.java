@@ -30,7 +30,7 @@ public class APIService extends MicroService{
 	protected void initialize() {
 
 		//Tick logic
-		Future<OrderReceipt> bookOrder= sendEvent(new BookOrderEvent(orderSchedule.get(0)));
+		Future<OrderReceipt> bookOrder;
 		
 	}
 
