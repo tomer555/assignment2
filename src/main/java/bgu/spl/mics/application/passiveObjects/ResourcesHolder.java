@@ -1,10 +1,7 @@
 package bgu.spl.mics.application.passiveObjects;
 
 import bgu.spl.mics.Future;
-
-import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -50,9 +47,16 @@ public class ResourcesHolder {
      * 			{@link DeliveryVehicle} when completed.   
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
-		//should we actually try to find a car
-		//TODO: Implement this
-		return new Future<>();
+		Future<DeliveryVehicle> output = new Future<>();
+		/*
+		if() {//completely free car
+			output.resolve();// someFreeCar inside
+			//delete car
+		}
+		else
+			return new Future<>();
+			*/
+	return null;
 	}
 	
 	/**

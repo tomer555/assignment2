@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BookOrderEvent;
+import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.passiveObjects.*;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,8 +56,12 @@ public class APIService extends MicroService{
 
 		doneFutures.start();
 		while (!orderReceiptFutures.isEmpty()){
-			Future<OrderReceipt> readyRecipt= doneReceiptFutures.poll();
-
+			Future<OrderReceipt> readyReceipt= doneReceiptFutures.poll();
+			if(readyReceipt!=null) {
+				OrderReceipt receipt = readyReceipt.get();
+				if (receipt != null)
+					sendEvent(new DeliveryEvent(customer));
+			}
 		}
 
 
