@@ -32,9 +32,21 @@ public class LogisticsService extends MicroService {
 			Customer customer=ev.getCustomer();
 			Thread driver =new Thread(()-> {
 				car.deliver(customer.getAddress(), customer.getDistance());
-				sendEvent(new ReturnCarEvent(car));
+
 			});
-			driver.start();
+			driver.start();//why? isnt the callback takes cares of the activation?
+			//the complete does not indicates on finishing the service, but only giving it a car ready to drive(?)
+			//XXXXXXXXXXXXXXXXXXXXXXX
+
+
+
+			//case the car is getting back from a destination, and cam be aqcuaired while doing so
+					Future<DeliveryVehicle> returnEventFuture=sendEvent(new ReturnCarEvent(car));
+			Thread driver2 =new Thread(()-> {
+				car.deliver(customer.getAddress(), customer.getDistance());
+
+			});
+			driver2.start();
 
 
 		});
