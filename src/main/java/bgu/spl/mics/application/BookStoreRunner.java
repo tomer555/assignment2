@@ -39,14 +39,9 @@ public class BookStoreRunner {
         //----------------------------Parsing Services-------------------------
         services services=reader.getServices();
 
-        //-----Parsing Time-------
-        time parsedTime=services.getTime();
+        //------------Parsed Customers+Api Services-----------------------
+        ParseCustomerAndApi(reader,services);
 
-        //Creating Singleton TimeService
-        TimeService globalTimer=new TimeService("Global Timer",parsedTime.getSpeed(),parsedTime.getDuration());
-
-
-        //---------------------------------------------------------------------------------
 
         //--------Parsing Service Amounts---------------
         int sellersAmount =services.getSelling();
@@ -56,7 +51,6 @@ public class BookStoreRunner {
 
 
         //--------------Creating Sellers--------------------
-
         for(int i=1;i<=sellersAmount;i++){
             SellingService seller=new SellingService("seller "+i,moneyRegister);
             Thread Tseller=new Thread(seller);
@@ -65,7 +59,6 @@ public class BookStoreRunner {
         }
 
         //------------Creating Logistics------------
-
         for(int i=1;i<=logisticAmount;i++){
             LogisticsService logistic=new LogisticsService("logistic "+i);
             Thread Tlogistic=new Thread(logistic);
@@ -86,6 +79,13 @@ public class BookStoreRunner {
             Tresource.start();
         }
 
+        //-----Parsing Time-------
+        time parsedTime=services.getTime();
+
+        //Creating Singleton TimeService
+        TimeService globalTimer=new TimeService("Global Timer",parsedTime.getSpeed(),parsedTime.getDuration());
+        Thread timeThread=new Thread(globalTimer);
+        timeThread.start();
 
 
         System.exit(0);
