@@ -9,6 +9,8 @@ import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
+import java.io.Serializable;
+
 /**
  * ResourceService is in charge of the store resources - the delivery vehicles.
  * Holds a reference to the {@link ResourceHolder} singleton of the store.
@@ -18,7 +20,7 @@ import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
  * You can add private fields and public methods to this class.
  * You MAY change constructor signatures and even add new public constructors.
  */
-public class ResourceService extends MicroService{
+public class ResourceService extends MicroService implements Serializable {
 	private ResourcesHolder resourcesHolder;
 	public ResourceService(String name,ResourcesHolder resourcesHolder) {
 		super(name);

@@ -8,6 +8,8 @@ import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.messages.ReturnCarEvent;
 import bgu.spl.mics.application.passiveObjects.*;
 
+import java.io.Serializable;
+
 /**
  * Logistic service in charge of delivering books that have been purchased to customers.
  * Handles {@link DeliveryEvent}.
@@ -17,7 +19,7 @@ import bgu.spl.mics.application.passiveObjects.*;
  * You can add private fields and public methods to this class.
  * You MAY change constructor signatures and even add new public constructors.
  */
-public class LogisticsService extends MicroService {
+public class LogisticsService extends MicroService implements Serializable {
 
 	public LogisticsService(String name) {
 		super(name);

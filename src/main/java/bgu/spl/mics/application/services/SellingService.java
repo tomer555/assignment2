@@ -7,6 +7,8 @@ import bgu.spl.mics.application.messages.BookOrderEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.*;
 
+import java.io.Serializable;
+
 /**
  * Selling service in charge of taking orders from customers.
  * Holds a reference to the {@link MoneyRegister} singleton of the store.
@@ -17,7 +19,7 @@ import bgu.spl.mics.application.passiveObjects.*;
  * You can add private fields and public methods to this class.
  * You MAY change constructor signatures and even add new public constructors.
  */
-public class SellingService extends MicroService{
+public class SellingService extends MicroService implements Serializable {
 	private MoneyRegister moneyRegister;
 	private int currentTick;
 	public SellingService(String name,MoneyRegister moneyRegister) {
