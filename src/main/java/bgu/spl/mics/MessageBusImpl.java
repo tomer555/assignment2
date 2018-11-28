@@ -44,7 +44,7 @@ public class MessageBusImpl implements MessageBus {
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		boolean found = false;
 		for (Map.Entry<Class<?>, Queue<MicroService>> message : messageSubscribersMap.entrySet()) {
-			if (type.isInstance(message.getKey())) {
+			if (type.isAssignableFrom(message.getKey())) {
 				message.getValue().add(m);
 				found = true;
 				break;
@@ -62,7 +62,7 @@ public class MessageBusImpl implements MessageBus {
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
 		boolean found = false;
 		for (Map.Entry<Class<?>, Queue<MicroService>> message : messageSubscribersMap.entrySet()) {
-			if (message.getKey()== type) {
+			if (type.isAssignableFrom(message.getKey())) {
 				message.getValue().add(m);
 				found = true;
 				break;
@@ -78,9 +78,9 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-
 		Future<T>  future= (Future<T>) futuresMap.get(e);
 		future.resolve(result);
+
 	}
 
 
@@ -94,7 +94,6 @@ public class MessageBusImpl implements MessageBus {
 		for (MicroService m : microServices) {
 			if (m != null) {
 				synchronized (m) {
-					System.out.println("broadcast deliverd");
 					queueMap.get(m).add(b);
 					m.notifyAll();
 				}
@@ -113,13 +112,12 @@ public class MessageBusImpl implements MessageBus {
 		if (round == null)
 			return null;
 		microServices.add(round);
-		queueMap.get(round).add(e);
+		Future<T> future = new Future<>();
 		synchronized (round) {
+			queueMap.get(round).add(e);
+			futuresMap.put(e, future);
 			round.notifyAll();
 		}
-			Future<T> future = new Future<>();
-			futuresMap.put(e, future);
-
 		return future;
 	}
 
@@ -140,10 +138,12 @@ public class MessageBusImpl implements MessageBus {
 		if (!queueMap.containsKey(m))
 			throw new InterruptedException();
 		Queue<Message> microMessages = queueMap.get(m);
-		while (microMessages.isEmpty())
+
+		while (microMessages.isEmpty()) {
 			synchronized (m) {
 				m.wait();
 			}
+		}
 		return microMessages.poll();
 	}
 }

@@ -36,7 +36,7 @@ public class InventoryService extends MicroService implements Serializable {
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
 
-		subscribeEvent(CheckAvailabilityEvent.class, ev -> {
+		subscribeEvent(CheckAvailabilityEvent.class, (ev) -> {
 			Integer bookPrice = inventory.checkAvailabiltyAndGetPrice(ev.getBookTitle());
 			complete(ev, bookPrice);
 		});
