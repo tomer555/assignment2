@@ -1,7 +1,11 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -62,10 +66,17 @@ public class Inventory {
      * 			second should reduce by one the number of books of the desired type.
      */
 	public OrderResult take (String book) {
-		
-		return null;
+
+		if (checkAvailabiltyAndGetPrice(book)==-1)
+			for (BookInventoryInfo bookToFind:listOfBooks) {
+				if (bookToFind.getBookTitle().equals(book)) {
+					bookToFind.setAmountInInventory(bookToFind.getAmountInInventory() - 1);
+					return OrderResult.SUCCESSFULLY_TAKEN;
+				}
+			}
+		return OrderResult.NOT_IN_STOCK;
 	}
-	
+
 	
 	
 	/**
@@ -75,10 +86,16 @@ public class Inventory {
      * @return the price of the book if it is available, -1 otherwise.
      */
 	public int checkAvailabiltyAndGetPrice(String book) {
-		//TODO: Implement this
-		return -1;
+		if (listOfBooks.contains(book))
+			for (BookInventoryInfo bookToFind:listOfBooks) {
+				if (bookToFind.getBookTitle().equals(book)&bookToFind.getAmountInInventory()>=1) {
+					return bookToFind.getPrice();
+				}
+				else return -1;
 	}
-	
+			return -1;
+				}
+
 	/**
      * 
      * <p>
@@ -88,6 +105,19 @@ public class Inventory {
      * This method is called by the main method in order to generate the output.
      */
 	public void printInventoryToFile(String filename){
-		//TODO: Implement this
+		HashMap<String,Integer>serializedMap=new HashMap<>();
+		for (BookInventoryInfo book:listOfBooks) {
+			serializedMap.put(book.getBookTitle(),book.getAmountInInventory());
+		}
+		try{
+			FileOutputStream fileOut=new FileOutputStream(filename+".txt");
+			ObjectOutputStream out =new ObjectOutputStream(fileOut);
+			out.writeObject(serializedMap);
+			out.close();
+			fileOut.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
-}
+	}
+
