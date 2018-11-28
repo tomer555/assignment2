@@ -25,21 +25,21 @@ public class BookStoreRunner {
         Gson gson=new Gson();
         JsonReader reader= gson.fromJson(fileReader,JsonReader.class);
 
-        //----------Creating Singleton Classes-------------------
+        //Creating Singleton Classes
         Inventory library=Inventory.getInstance();
         ResourcesHolder resources =ResourcesHolder.getInstance();
         MoneyRegister moneyRegister=MoneyRegister.getInstance();
 
-        //-------------Parsing Books-------------------------------
+        //Parsing Books
         addBooksToInventory(reader,library);
 
-        //-------------Parsing DeliveryVehicles-------------------------------
+        //Parsing DeliveryVehicles
         addVehiclesToResource(reader,resources);
 
-        //----------------------------Parsing Services-------------------------
+        //Parsing Services
         services services=reader.getServices();
 
-        //------------Parsed Customers+Api Services-----------------------
+        //Parsed Customers+Api Services
         ParseCustomerAndApi(reader,services);
 
 

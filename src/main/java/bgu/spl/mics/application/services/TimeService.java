@@ -43,6 +43,7 @@ public class TimeService extends MicroService{
 				else {
 					sendBroadcast(new TerminationBroadcast());
 					timer.cancel();
+					terminate();
 				}
 				ticks++;
 			}

@@ -13,10 +13,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class MessageBusImpl implements MessageBus {
 
 	private static volatile MessageBus instance = null;
-	private static final Object o = new Object();
+	private static final Object lockBus = new Object();
 	private ConcurrentHashMap<MicroService,Queue<Message>> queueMap;
 	private ConcurrentHashMap<Class<?>, Queue<MicroService>> messageSubscribersMap;
 	private ConcurrentHashMap<Event,Future> futuresMap;
+	private ConcurrentHashMap<MicroService,Object> locks;
+
 
 
 
@@ -25,13 +27,17 @@ public class MessageBusImpl implements MessageBus {
 		this.queueMap = new ConcurrentHashMap<>();
 		this.messageSubscribersMap = new ConcurrentHashMap<>();
 		this.futuresMap = new ConcurrentHashMap<>();
+		this.locks=new ConcurrentHashMap<>();
 
 	}
 
+	/**
+	 * @return Singleton MessageBus \
+	 */
 	public static MessageBus getInstance() {
 		MessageBus result = instance;
 		if (result == null) {
-			synchronized (o) {
+			synchronized (lockBus) {
 				result = instance;
 				if (result == null)
 					instance = result = new MessageBusImpl();
@@ -40,6 +46,11 @@ public class MessageBusImpl implements MessageBus {
 		return result;
 	}
 
+	/**
+	 * @param type The type to subscribe to,
+	 * @param m    The subscribing micro-service.
+	 * @param <T> Generic type
+	 */
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		boolean found = false;
@@ -58,6 +69,10 @@ public class MessageBusImpl implements MessageBus {
 		}
 	}
 
+	/**
+	 * @param type The type to subscribe to.
+	 * @param m    The subscribing micro-service.
+	 */
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
 		boolean found = false;
@@ -85,7 +100,9 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 
-
+	/**
+	 * @param b The message to added to the queues.
+	 */
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		if (!messageSubscribersMap.containsKey(b.getClass()))
@@ -94,15 +111,20 @@ public class MessageBusImpl implements MessageBus {
 		Queue<MicroService> microServices = messageSubscribersMap.get(b.getClass());
 		for (MicroService m : microServices) {
 			if (m != null) {
-				synchronized (queueMap.) {
+				synchronized (locks.get(m)) {
 					queueMap.get(m).add(b);
-					m.notifyAll();
+					locks.get(m).notifyAll();
 				}
 			}
 		}
 	}
 
 
+	/**
+	 * @param e   The event to add to the queue.
+	 * @param <T> generic type
+	 * @return future from type T that will be resolved at some point
+	 */
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
 		if (!messageSubscribersMap.containsKey(e.getClass()))
@@ -114,28 +136,42 @@ public class MessageBusImpl implements MessageBus {
 			return null;
 		microServices.add(round);
 		Future<T> future = new Future<>();
-		synchronized (round) {
+		synchronized (locks.get(round)) {
 			queueMap.get(round).add(e);
 			futuresMap.put(e, future);
-			round.notifyAll();
+			locks.get(round).notifyAll();
 		}
 		return future;
 	}
 
+	/**
+	 * @param m the micro-service to create a queue for.
+	 */
 	@Override
 	public void register(MicroService m) {
 		queueMap.put(m, new LinkedBlockingQueue<>());
+		locks.put(m,new Object());
 
 	}
 
+	/**
+	 * @param m the micro-service to unregister.
+	 */
 	@Override
 	public void unregister(MicroService m) {
 		queueMap.remove(m);
+		locks.remove(m);
 		messageSubscribersMap.forEach((message,queue)->{
 			queue.removeIf((micro)->micro.equals(m));
 		});
 	}
 
+	/**
+	 * @param m The micro-service requesting to take a message from its message
+	 *          queue.
+	 * @return Message that will return to a microService to execute
+	 * @throws InterruptedException if the Thread will be interrupted
+	 */
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		if (!queueMap.containsKey(m))
@@ -143,8 +179,8 @@ public class MessageBusImpl implements MessageBus {
 		Queue<Message> microMessages = queueMap.get(m);
 
 		while (microMessages.isEmpty()) {
-			synchronized (m) {
-				m.wait();
+			synchronized (locks.get(m)) {
+				locks.get(m).wait();
 			}
 		}
 		return microMessages.poll();

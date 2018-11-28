@@ -67,7 +67,7 @@ public class Inventory {
      */
 	public OrderResult take (String book) {
 
-		if (checkAvailabiltyAndGetPrice(book)==-1)
+		if (checkAvailabilityAndGetPrice(book)==-1)
 			for (BookInventoryInfo bookToFind:listOfBooks) {
 				if (bookToFind.getBookTitle().equals(book)) {
 					bookToFind.setAmountInInventory(bookToFind.getAmountInInventory() - 1);
@@ -85,16 +85,15 @@ public class Inventory {
      * @param book 		Name of the book.
      * @return the price of the book if it is available, -1 otherwise.
      */
-	public int checkAvailabiltyAndGetPrice(String book) {
-		if (listOfBooks.contains(book))
-			for (BookInventoryInfo bookToFind:listOfBooks) {
-				if (bookToFind.getBookTitle().equals(book)&bookToFind.getAmountInInventory()>=1) {
-					return bookToFind.getPrice();
-				}
-				else return -1;
+	public int checkAvailabilityAndGetPrice(String book) {
+		for (BookInventoryInfo bookToFind : listOfBooks) {
+			if (bookToFind.getBookTitle().equals(book) & bookToFind.getAmountInInventory() >= 1) {
+				return bookToFind.getPrice();
+			}
+		}
+		return -1;
+
 	}
-			return -1;
-				}
 
 	/**
      * 
