@@ -1,4 +1,6 @@
 package bgu.spl.mics.application;
+import bgu.spl.mics.MessageBus;
+import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.application.parsing.FirstPart.initialInventory;
 import bgu.spl.mics.application.parsing.JsonReader;
 import bgu.spl.mics.application.parsing.ThirdPart.*;
@@ -16,10 +18,6 @@ import java.util.List;
 public class BookStoreRunner {
     private static int orderId=0;
 
-
-
-
-
     public static void main(String[] args) throws FileNotFoundException {
         //--------------Connection to json input file --------------------
         File file =new File("input.json");
@@ -36,9 +34,7 @@ public class BookStoreRunner {
         addBooksToInventory(reader,library);
 
         //-------------Parsing DeliveryVehicles-------------------------------
-        addVeicahlesToResource(reader,resources);
-
-
+        addVehiclesToResource(reader,resources);
 
         //----------------------------Parsing Services-------------------------
         services services=reader.getServices();
@@ -49,39 +45,54 @@ public class BookStoreRunner {
         //Creating Singleton TimeService
         TimeService globalTimer=new TimeService("Global Timer",parsedTime.getSpeed(),parsedTime.getDuration());
 
+
+        //---------------------------------------------------------------------------------
+
         //--------Parsing Service Amounts---------------
         int sellersAmount =services.getSelling();
         int logisticAmount= services.getLogistics();
         int inventoryAmount =services.getInventoryService();
         int resourceAmount= services.getResourcesService();
 
+
         //--------------Creating Sellers--------------------
-        List<SellingService> sellers=new LinkedList<>();
+
         for(int i=1;i<=sellersAmount;i++){
-            sellers.add(new SellingService("seller "+i,moneyRegister));
+            SellingService seller=new SellingService("seller "+i,moneyRegister);
+            Thread Tseller=new Thread(seller);
+            Tseller.start();
+
         }
 
         //------------Creating Logistics------------
-        List<LogisticsService> logistics=new LinkedList<>();
+
         for(int i=1;i<=logisticAmount;i++){
-            logistics.add(new LogisticsService("logistic "+i));
+            LogisticsService logistic=new LogisticsService("logistic "+i);
+            Thread Tlogistic=new Thread(logistic);
+            Tlogistic.start();
         }
 
         //------------Creating InventoryServices------------
-        List<InventoryService> inventoryServices=new LinkedList<>();
         for(int i=1;i<=inventoryAmount;i++){
-            inventoryServices.add(new InventoryService("inventoryService "+i,library));
+            InventoryService inventoryService=new InventoryService("inventoryService "+i,library);
+            Thread Tinventory=new Thread(inventoryService);
+            Tinventory.start();
         }
 
         //------------Creating ResourceServices------------
-        List<ResourceService> resourceServices=new LinkedList<>();
         for(int i=1;i<=resourceAmount;i++){
-            resourceServices.add(new ResourceService("logistic "+i,resources));
+            ResourceService service=new ResourceService("logistic "+i,resources);
+            Thread Tresource=new Thread(service);
+            Tresource.start();
         }
 
-        //------------Parsed Customers+Api Services-----------------------
-        List<APIService> apiServices =new LinkedList<>();
 
+
+        System.exit(0);
+
+    }
+
+    private static void ParseCustomerAndApi(JsonReader reader, services services){
         List<customers> parsedCustomers= services.getCustomers();
         List<Customer> customers= new LinkedList<>();
         parsedCustomers.forEach((c)->{
@@ -94,17 +105,14 @@ public class BookStoreRunner {
                 OrderReceipt receipt =new OrderReceipt(orderId++,c.getId(),p.getBookTitle(),p.getTick());
                 orderReceipts.add(receipt);
             });
-            apiServices.add(new APIService("API: "+customer.getName(),orderReceipts,customer));
+            APIService apiService=new APIService("API: "+customer.getName(),orderReceipts,customer);
+            Thread Tapi=new Thread(apiService);
+            Tapi.start();
         });
-        System.out.println("fini");
-
-        //---------------------------------------------------------------------------------
-
-        System.exit(0);
-
     }
 
-    private static void addVeicahlesToResource(JsonReader reader,ResourcesHolder resources){
+
+    private static void addVehiclesToResource(JsonReader reader, ResourcesHolder resources){
         List<bgu.spl.mics.application.parsing.SecondPart.vehicles> parsedCars=reader.getCars();
         DeliveryVehicle[] array=new DeliveryVehicle[parsedCars.size()];
         for(int i=0;i<array.length;i++){
@@ -115,6 +123,8 @@ public class BookStoreRunner {
             resources.load(array);
         }
     }
+
+
 
     private  static void addBooksToInventory(JsonReader reader,Inventory inventory){
         List<initialInventory> parsedBooks = reader.getBooks();
