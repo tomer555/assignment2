@@ -153,14 +153,18 @@ public abstract class MicroService implements Runnable {
      * otherwise you will end up in an infinite loop.
      */
     @Override
+    @SuppressWarnings("unchecked")
     public final void run() {
+
         msgBus=MessageBusImpl.getInstance();
         msgBus.register(this);
+
         initialize();
         while (!terminated) {
             try {
                 Message m=msgBus.awaitMessage(this);
                 Callback callback= callbacks.get(m.getClass());
+
                 callback.call(m);
             } catch (InterruptedException e) {
                 e.printStackTrace();

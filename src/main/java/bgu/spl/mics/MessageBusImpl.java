@@ -77,6 +77,7 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> void complete(Event<T> e, T result) {
 		Future<T>  future= (Future<T>) futuresMap.get(e);
 		future.resolve(result);
@@ -93,7 +94,7 @@ public class MessageBusImpl implements MessageBus {
 		Queue<MicroService> microServices = messageSubscribersMap.get(b.getClass());
 		for (MicroService m : microServices) {
 			if (m != null) {
-				synchronized (m) {
+				synchronized (queueMap.) {
 					queueMap.get(m).add(b);
 					m.notifyAll();
 				}
