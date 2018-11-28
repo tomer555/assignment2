@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.services;
+import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
@@ -38,8 +40,10 @@ public class TimeService extends MicroService{
 			public void run() {
 				if(ticks<=duration)
 					sendBroadcast(new TickBroadcast(ticks));
-				else
+				else {
+					sendBroadcast(new TerminationBroadcast());
 					timer.cancel();
+				}
 				ticks++;
 			}
 		};

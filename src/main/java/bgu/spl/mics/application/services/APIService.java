@@ -3,6 +3,7 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BookOrderEvent;
 import bgu.spl.mics.application.messages.DeliveryEvent;
+import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.passiveObjects.*;
 
 import java.io.Serializable;
@@ -36,6 +37,11 @@ public class APIService extends MicroService implements Serializable {
 
 	@Override
 	protected void initialize() {
+
+		//Subscribe To Termination
+		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
+
+
 		orderSchedule.sort((order1,order2)->{
 			if (order1.getOrderTick()<order2.getOrderTick())
 				return 1;

@@ -6,7 +6,6 @@ import bgu.spl.mics.application.passiveObjects.*;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.*;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,6 +15,11 @@ import java.util.List;
  */
 public class BookStoreRunner {
     private static int orderId=0;
+
+
+
+
+
     public static void main(String[] args) throws FileNotFoundException {
         //--------------Connection to json input file --------------------
         File file =new File("input.json");
@@ -23,38 +27,17 @@ public class BookStoreRunner {
         Gson gson=new Gson();
         JsonReader reader= gson.fromJson(fileReader,JsonReader.class);
 
-        //Creating Inventory for books
+        //----------Creating Singleton Classes-------------------
         Inventory library=Inventory.getInstance();
+        ResourcesHolder resources =ResourcesHolder.getInstance();
+        MoneyRegister moneyRegister=MoneyRegister.getInstance();
 
         //-------------Parsing Books-------------------------------
-        List<initialInventory> parsedBooks = reader.getBooks();
-        BookInventoryInfo[] books= new BookInventoryInfo[parsedBooks.size()];
-        for(int i=0;i<books.length;i++){
-            initialInventory b=parsedBooks.get(i);
-            books[i]=new BookInventoryInfo(b.getBookTitle(),b.getAmount(),b.getPrice());
-        }
-
-        if (library != null) {
-            library.load(books);
-        }
-
-        //Creating ResourceHolder for DeliveryVehicles
-        ResourcesHolder resources =ResourcesHolder.getInstance();
+        addBooksToInventory(reader,library);
 
         //-------------Parsing DeliveryVehicles-------------------------------
-        List<bgu.spl.mics.application.parsing.SecondPart.vehicles> parsedCars=reader.getCars();
-        DeliveryVehicle[] array=new DeliveryVehicle[parsedCars.size()];
-        for(int i=0;i<array.length;i++){
-            bgu.spl.mics.application.parsing.SecondPart.vehicles d =parsedCars.get(i);
-            array[i]=new DeliveryVehicle(d.getLicense(),d.getSpeed());
-        }
+        addVeicahlesToResource(reader,resources);
 
-        if(resources!=null){ ;
-            resources.load(array);
-        }
-
-        //Creating MoneyRegister for OrderReceipt
-        MoneyRegister moneyRegister=MoneyRegister.getInstance();
 
 
         //----------------------------Parsing Services-------------------------
@@ -63,7 +46,7 @@ public class BookStoreRunner {
         //-----Parsing Time-------
         time parsedTime=services.getTime();
 
-        //Creating TimeService
+        //Creating Singleton TimeService
         TimeService globalTimer=new TimeService("Global Timer",parsedTime.getSpeed(),parsedTime.getDuration());
 
         //--------Parsing Service Amounts---------------
@@ -118,6 +101,32 @@ public class BookStoreRunner {
         //---------------------------------------------------------------------------------
 
         System.exit(0);
+
+    }
+
+    private static void addVeicahlesToResource(JsonReader reader,ResourcesHolder resources){
+        List<bgu.spl.mics.application.parsing.SecondPart.vehicles> parsedCars=reader.getCars();
+        DeliveryVehicle[] array=new DeliveryVehicle[parsedCars.size()];
+        for(int i=0;i<array.length;i++){
+            bgu.spl.mics.application.parsing.SecondPart.vehicles d =parsedCars.get(i);
+            array[i]=new DeliveryVehicle(d.getLicense(),d.getSpeed());
+        }
+        if(resources!=null){ ;
+            resources.load(array);
+        }
+    }
+
+    private  static void addBooksToInventory(JsonReader reader,Inventory inventory){
+        List<initialInventory> parsedBooks = reader.getBooks();
+        BookInventoryInfo[] books= new BookInventoryInfo[parsedBooks.size()];
+        for(int i=0;i<books.length;i++){
+            initialInventory b=parsedBooks.get(i);
+            books[i]=new BookInventoryInfo(b.getBookTitle(),b.getAmount(),b.getPrice());
+        }
+
+        if (inventory != null) {
+            inventory.load(books);
+        }
 
     }
 }
