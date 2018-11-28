@@ -32,6 +32,8 @@ public class BookInventoryInfo implements Serializable {
      * @return amount of available books.      
      */
 	public int getAmountInInventory() { return amountInInventory; }
+	public void setAmountInInventory(int newAmount) {  amountInInventory=newAmount; }
+
 
 	/**
      * Retrieves the price for  book.
