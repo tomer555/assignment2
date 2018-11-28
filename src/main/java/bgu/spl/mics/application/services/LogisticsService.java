@@ -29,27 +29,15 @@ public class LogisticsService extends MicroService implements Serializable {
 	@Override
 	protected void initialize() {
 		subscribeEvent(DeliveryEvent.class,ev->{
+			//getting a reference to the messageBus's future
 			Future<DeliveryVehicle> deliveryEventFuture=sendEvent(new AcquireCarEvent());
+			//waiting for that future to resolve
 			DeliveryVehicle car= deliveryEventFuture.get();
 			Customer customer=ev.getCustomer();
-			Thread driver =new Thread(()-> {
-				car.deliver(customer.getAddress(), customer.getDistance());
 
-			});
-			driver.start();//why? isnt the callback takes cares of the activation?
-			//the complete does not indicates on finishing the service, but only giving it a car ready to drive(?)
-			//XXXXXXXXXXXXXXXXXXXXXXX
+			car.deliver(customer.getAddress(), customer.getDistance());
 
-
-
-			//case the car is getting back from a destination, and cam be aqcuaired while doing so
-					Future<DeliveryVehicle> returnEventFuture=sendEvent(new ReturnCarEvent(car));
-			Thread driver2 =new Thread(()-> {
-				car.deliver(customer.getAddress(), customer.getDistance());
-
-			});
-			driver2.start();
-
+			sendEvent(new ReturnCarEvent(car));
 
 		});
 		
