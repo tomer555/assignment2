@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.passiveObjects;
 
 import bgu.spl.mics.Future;
+import bgu.spl.mics.application.messages.ReturnCarEvent;
+
 import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -47,12 +49,14 @@ public class ResourcesHolder {
      * 			{@link DeliveryVehicle} when completed.   
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
-		DeliveryVehicle vehicle=carsQueue.poll();
-		Future<DeliveryVehicle> future=new Future<>();
+		DeliveryVehicle vehicle = carsQueue.poll();
+
+	//	if (vehicle==null)	synchronized (lockResource) {}
+
+		Future<DeliveryVehicle> future = new Future<>();
 		future.resolve(vehicle);
 		return future;
 	}
-	
 	/**
      * Releases a specified vehicle, opening it again for the possibility of
      * acquisition.
@@ -60,6 +64,7 @@ public class ResourcesHolder {
      * @param vehicle	{@link DeliveryVehicle} to be released.
      */
 	public void releaseVehicle(DeliveryVehicle vehicle) {
+
 		carsQueue.add(vehicle);
 	}
 	

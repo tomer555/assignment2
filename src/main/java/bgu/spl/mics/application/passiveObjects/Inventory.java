@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Vector;
 
 /**
  * Passive data-object representing the store inventory.
@@ -13,25 +16,42 @@ package bgu.spl.mics.application.passiveObjects;
  * You can add ONLY private fields and methods to this class as you see fit.
  */
 public class Inventory {
+	private List<BookInventoryInfo> listOfBooks;
+	private static volatile Inventory instance = null;
+	private static final Object lockInventory = new Object();
+
+
+	//A Thread safe constructor
+	private Inventory() {
+		this.listOfBooks = new Vector<>();
+
+	}
+	public static Inventory getInstance() {
+		Inventory result = instance;
+		if (result == null) {
+			synchronized (lockInventory) {
+				result = instance;
+				if (result == null)
+					instance = result = new Inventory();
+			}
+		}
+		return result;
+	}
 
 	/**
-     * Retrieves the single instance of this class.
-     */
-	public static Inventory getInstance() {
-		//TODO: Implement this
-		return null;
-	}
-	
-	/**
-     * Initializes the store inventory. This method adds all the items given to the store
-     * inventory.
-     * <p>
-     * @param inventory 	Data structure containing all data necessary for initialization
-     * 						of the inventory.
-     */
+	 * Initializes the store inventory. This method adds all the items given to the store
+	 * inventory.
+	 * <p>
+	 * @param inventory 	Data structure containing all data necessary for initialization
+	 * 						of the inventory.
+	 * @pre:listOfBooks.isEmpty()==true
+	 * @post:listOfBooks.isEmpty()==false
+	 */
 	public void load (BookInventoryInfo[ ] inventory ) {
-		
+
+		Collections.addAll(this.listOfBooks,inventory);
 	}
+
 	
 	/**
      * Attempts to take one book from the store.
