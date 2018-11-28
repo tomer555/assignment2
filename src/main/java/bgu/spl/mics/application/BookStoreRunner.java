@@ -1,14 +1,12 @@
 package bgu.spl.mics.application;
 import bgu.spl.mics.application.parsing.FirstPart.initialInventory;
 import bgu.spl.mics.application.parsing.JsonReader;
-import bgu.spl.mics.application.parsing.ThirdPart.creditCard;
-import bgu.spl.mics.application.parsing.ThirdPart.customers;
-import bgu.spl.mics.application.parsing.ThirdPart.services;
-import bgu.spl.mics.application.parsing.ThirdPart.time;
+import bgu.spl.mics.application.parsing.ThirdPart.*;
 import bgu.spl.mics.application.passiveObjects.*;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.*;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,7 +15,7 @@ import java.util.List;
  * In the end, you should output serialized objects.
  */
 public class BookStoreRunner {
-    private int orderId=0;
+    private static int orderId=0;
     public static void main(String[] args) throws FileNotFoundException {
         //--------------Connection to json input file --------------------
         File file =new File("input.json");
@@ -30,10 +28,14 @@ public class BookStoreRunner {
 
         //-------------Parsing Books-------------------------------
         List<initialInventory> parsedBooks = reader.getBooks();
-        List<BookInventoryInfo> books= new LinkedList<>();
-        parsedBooks.forEach((b)->books.add(new BookInventoryInfo(b.getBookTitle(),b.getAmount(),b.getPrice())));
+        BookInventoryInfo[] books= new BookInventoryInfo[parsedBooks.size()];
+        for(int i=0;i<books.length;i++){
+            initialInventory b=parsedBooks.get(i);
+            books[i]=new BookInventoryInfo(b.getBookTitle(),b.getAmount(),b.getPrice());
+        }
+
         if (library != null) {
-            library.load((BookInventoryInfo[])books.toArray());
+            library.load(books);
         }
 
         //Creating ResourceHolder for DeliveryVehicles
@@ -41,10 +43,14 @@ public class BookStoreRunner {
 
         //-------------Parsing DeliveryVehicles-------------------------------
         List<bgu.spl.mics.application.parsing.SecondPart.vehicles> parsedCars=reader.getCars();
-        List<DeliveryVehicle> cars= new LinkedList<>();
-        parsedCars.forEach((c)->cars.add(new DeliveryVehicle(c.getLicense(),c.getSpeed())));
-        if(resources!=null){
-            resources.load((DeliveryVehicle[])cars.toArray());
+        DeliveryVehicle[] array=new DeliveryVehicle[parsedCars.size()];
+        for(int i=0;i<array.length;i++){
+            bgu.spl.mics.application.parsing.SecondPart.vehicles d =parsedCars.get(i);
+            array[i]=new DeliveryVehicle(d.getLicense(),d.getSpeed());
+        }
+
+        if(resources!=null){ ;
+            resources.load(array);
         }
 
         //Creating MoneyRegister for OrderReceipt
@@ -96,15 +102,22 @@ public class BookStoreRunner {
         List<customers> parsedCustomers= services.getCustomers();
         List<Customer> customers= new LinkedList<>();
         parsedCustomers.forEach((c)->{
+            List<orderSchedule> parsedSchdules= c.getOrderSchedules();
             creditCard card=c.getCreditCard();
-            customers.add(new Customer(c.getName(),c.getId(),c.getAddress(),c.getDistance(),card.getNumber(),card.getAmount()));
+            Customer customer=new Customer(c.getName(),c.getId(),c.getAddress(),c.getDistance(),card.getNumber(),card.getAmount());
+            customers.add(customer);
+            List<OrderReceipt> orderReceipts=new LinkedList<>();
+            parsedSchdules.forEach((p)->{
+                OrderReceipt receipt =new OrderReceipt(orderId++,c.getId(),p.getBookTitle(),p.getTick());
+                orderReceipts.add(receipt);
+            });
+            apiServices.add(new APIService("API: "+customer.getName(),orderReceipts,customer));
         });
+        System.out.println("fini");
 
+        //---------------------------------------------------------------------------------
 
-
-        //----------------
-
-
+        System.exit(0);
 
     }
 }

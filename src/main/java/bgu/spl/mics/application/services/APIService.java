@@ -28,7 +28,7 @@ public class APIService extends MicroService implements Serializable {
 	private Customer customer;
 	public APIService(String name, List<OrderReceipt> orderSchedule, Customer customer) {
 		super(name);
-		orderSchedule=new LinkedList<>();
+		this.orderSchedule=orderSchedule;
 		this.orderReceiptFutures=new LinkedList<>();
 		this.doneReceiptFutures=new LinkedBlockingQueue<>();
 		this.customer=customer;
