@@ -7,6 +7,7 @@ import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
+import java.io.Serializable;
 
 
 /**
@@ -19,7 +20,7 @@ import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
  * You MAY change constructor signatures and even add new public constructors.
  */
 
-public class InventoryService extends MicroService {
+public class InventoryService extends MicroService implements Serializable {
 	private Inventory inventory;
 
 	public InventoryService(String name, Inventory inventory) {

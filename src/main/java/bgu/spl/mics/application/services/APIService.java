@@ -4,6 +4,8 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BookOrderEvent;
 import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.passiveObjects.*;
+
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -19,14 +21,14 @@ import java.util.stream.Stream;
  * You can add private fields and public methods to this class.
  * You MAY change constructor signatures and even add new public constructors.
  */
-public class APIService extends MicroService{
+public class APIService extends MicroService implements Serializable {
 	private List<OrderReceipt> orderSchedule;
 	private List<Future<OrderReceipt>> orderReceiptFutures;
 	private BlockingQueue<Future<OrderReceipt>> doneReceiptFutures;
 	private Customer customer;
 	public APIService(String name, List<OrderReceipt> orderSchedule, Customer customer) {
 		super(name);
-		orderSchedule=new LinkedList<>();
+		this.orderSchedule=orderSchedule;
 		this.orderReceiptFutures=new LinkedList<>();
 		this.doneReceiptFutures=new LinkedBlockingQueue<>();
 		this.customer=customer;
