@@ -1,10 +1,7 @@
 package bgu.spl.mics.application.services;
 import bgu.spl.mics.Future;
-import bgu.spl.mics.application.messages.AcquireBookEvent;
-import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.BookOrderEvent;
-import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.*;
 
 import java.io.Serializable;
@@ -33,9 +30,11 @@ public class SellingService extends MicroService implements Serializable {
 
 
 		//Subscribe to TickBroadcast
-		subscribeBroadcast(TickBroadcast.class,message->{
-			currentTick=message.getCurrentTick();
-		});
+		subscribeBroadcast(TickBroadcast.class,message->currentTick=message.getCurrentTick());
+
+
+		//Subscribe To Termination
+		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
 
 
 		//Subscribe to BookOrderEvent

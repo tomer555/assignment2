@@ -2,10 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.AcquireCarEvent;
-import bgu.spl.mics.application.messages.BookOrderEvent;
-import bgu.spl.mics.application.messages.DeliveryEvent;
-import bgu.spl.mics.application.messages.ReturnCarEvent;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.*;
 
 import java.io.Serializable;
@@ -20,14 +17,20 @@ import java.io.Serializable;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class LogisticsService extends MicroService implements Serializable {
-
+	private int currentTick;
 	public LogisticsService(String name) {
 		super(name);
+		this.currentTick=1;
 
 	}
 
 	@Override
 	protected void initialize() {
+
+		//Subscribe To Termination
+		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
+
+
 		subscribeEvent(DeliveryEvent.class,ev->{
 			Future<DeliveryVehicle> deliveryEventFuture=sendEvent(new AcquireCarEvent());
 			DeliveryVehicle car= deliveryEventFuture.get();

@@ -4,6 +4,8 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireCarEvent;
 import bgu.spl.mics.application.messages.ReturnCarEvent;
+import bgu.spl.mics.application.messages.TerminationBroadcast;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
@@ -22,13 +24,20 @@ import java.io.Serializable;
  */
 public class ResourceService extends MicroService implements Serializable {
 	private ResourcesHolder resourcesHolder;
+
 	public ResourceService(String name,ResourcesHolder resourcesHolder) {
 		super(name);
 		this.resourcesHolder=resourcesHolder;
+
 	}
 
 	@Override
 	protected void initialize() {
+
+		//Subscribe To Termination
+		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
+
+
 		subscribeEvent(AcquireCarEvent.class,ev->{
 			Future <DeliveryVehicle> deliveryVehicleFuture=resourcesHolder.acquireVehicle();
 			DeliveryVehicle deliveryVehicle= deliveryVehicleFuture.get();
