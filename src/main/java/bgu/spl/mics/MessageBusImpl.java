@@ -14,11 +14,9 @@ public class MessageBusImpl implements MessageBus {
 
 	private static volatile MessageBus instance = null;
 	private static final Object lockBus = new Object();
-	private ConcurrentHashMap<MicroService,Queue<Message>> queueMap;
-	private ConcurrentHashMap<Class<?>, Queue<MicroService>> messageSubscribersMap;
-	private ConcurrentHashMap<Event,Future> futuresMap;
-	private ConcurrentHashMap<MicroService,Object> locks;
-
+	private ConcurrentHashMap<MicroService, BlockingQueue<Message>> queueMap;
+	private ConcurrentHashMap<Class<?>, BlockingQueue<MicroService>> messageSubscribersMap;
+	private ConcurrentHashMap<Event, Future> futuresMap;
 
 
 
@@ -27,7 +25,7 @@ public class MessageBusImpl implements MessageBus {
 		this.queueMap = new ConcurrentHashMap<>();
 		this.messageSubscribersMap = new ConcurrentHashMap<>();
 		this.futuresMap = new ConcurrentHashMap<>();
-		this.locks=new ConcurrentHashMap<>();
+
 
 	}
 
@@ -46,17 +44,17 @@ public class MessageBusImpl implements MessageBus {
 		return result;
 	}
 
-	/**
-	 * @param type The type to subscribe to,
-	 * @param m    The subscribing micro-service.
-	 * @param <T> Generic type
-	 */
-	@Override
-	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
+
+
+	private <T> void subscribeMessage(Class<? extends Message> type,MicroService m){
 		boolean found = false;
-		for (Map.Entry<Class<?>, Queue<MicroService>> message : messageSubscribersMap.entrySet()) {
+		for (Map.Entry<Class<?>, BlockingQueue<MicroService>> message : messageSubscribersMap.entrySet()) {
 			if (type.isAssignableFrom(message.getKey())) {
-				message.getValue().add(m);
+				try {
+					message.getValue().put(m);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 				found = true;
 				break;
 			}
@@ -67,6 +65,17 @@ public class MessageBusImpl implements MessageBus {
 			messageSubscribersMap.put(type, toInsert);
 
 		}
+
+
+	}
+	/**
+	 * @param type The type to subscribe to,
+	 * @param m    The subscribing micro-service.
+	 * @param <T>  Generic type
+	 */
+	@Override
+	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
+		subscribeMessage(type,m);
 	}
 
 	/**
@@ -75,28 +84,14 @@ public class MessageBusImpl implements MessageBus {
 	 */
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		boolean found = false;
-		for (Map.Entry<Class<?>, Queue<MicroService>> message : messageSubscribersMap.entrySet()) {
-			if (type.isAssignableFrom(message.getKey())) {
-				message.getValue().add(m);
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			BlockingQueue<MicroService> toInsert = new LinkedBlockingQueue<>();
-			toInsert.add(m);
-			messageSubscribersMap.put(type, toInsert);
-
-		}
+		subscribeMessage(type,m);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> void complete(Event<T> e, T result) {
-		Future<T>  future= (Future<T>) futuresMap.get(e);
+		Future<T> future = (Future<T>) futuresMap.get(e);
 		future.resolve(result);
-
 	}
 
 
@@ -111,13 +106,15 @@ public class MessageBusImpl implements MessageBus {
 		Queue<MicroService> microServices = messageSubscribersMap.get(b.getClass());
 		for (MicroService m : microServices) {
 			if (m != null) {
-				synchronized (locks.get(m)) {
-					queueMap.get(m).add(b);
-					locks.get(m).notifyAll();
+				try {
+					queueMap.get(m).put(b);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
 		}
 	}
+
 
 
 	/**
@@ -129,18 +126,17 @@ public class MessageBusImpl implements MessageBus {
 	public <T> Future<T> sendEvent(Event<T> e) {
 		if (!messageSubscribersMap.containsKey(e.getClass()))
 			return null;
-
-		Queue<MicroService> microServices = messageSubscribersMap.get(e.getClass());
-		MicroService round = microServices.poll();
-		if (round == null)
-			return null;
-		microServices.add(round);
+		BlockingQueue<MicroService> microServices = messageSubscribersMap.get(e.getClass());
+		MicroService round = null;
 		Future<T> future = new Future<>();
-		synchronized (locks.get(round)) {
-			queueMap.get(round).add(e);
-			futuresMap.put(e, future);
-			locks.get(round).notifyAll();
+		try {
+			round = microServices.take();
+			microServices.put(round);
+			queueMap.get(round).put(e);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
 		}
+		futuresMap.put(e, future);
 		return future;
 	}
 
@@ -150,7 +146,6 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		queueMap.put(m, new LinkedBlockingQueue<>());
-		locks.put(m,new Object());
 
 	}
 
@@ -160,9 +155,8 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void unregister(MicroService m) {
 		queueMap.remove(m);
-		locks.remove(m);
-		messageSubscribersMap.forEach((message,queue)->{
-			queue.removeIf((micro)->micro.equals(m));
+		messageSubscribersMap.forEach((message, queue) -> {
+			queue.removeIf((micro) -> micro.equals(m));
 		});
 	}
 
@@ -176,13 +170,8 @@ public class MessageBusImpl implements MessageBus {
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		if (!queueMap.containsKey(m))
 			throw new InterruptedException();
-		Queue<Message> microMessages = queueMap.get(m);
-
-		while (microMessages.isEmpty()) {
-			synchronized (locks.get(m)) {
-				locks.get(m).wait();
-			}
-		}
-		return microMessages.poll();
+		BlockingQueue<Message> microMessages = queueMap.get(m);
+		return microMessages.take();
 	}
 }
+

@@ -23,10 +23,12 @@ import java.io.Serializable;
 
 public class InventoryService extends MicroService implements Serializable {
 	private Inventory inventory;
+	private boolean initialized;
 
 	public InventoryService(String name, Inventory inventory) {
 		super(name);
 		this.inventory = inventory;
+		this.initialized=false;
 	}
 
 	@Override
@@ -37,7 +39,12 @@ public class InventoryService extends MicroService implements Serializable {
 		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
 
 		subscribeEvent(CheckAvailabilityEvent.class, (ev) -> {
-			System.out.println(getName()+ "got CheckAvailabilityEvent of book: "+ev.getBookTitle()+" to check");
+
+
+			System.out.println(getName()+ " got CheckAvailabilityEvent of book: "+ev.getBookTitle()+" to check");
+
+
+
 			Integer bookPrice = inventory.checkAvailabilityAndGetPrice(ev.getBookTitle());
 			complete(ev, bookPrice);
 		});
@@ -47,6 +54,10 @@ public class InventoryService extends MicroService implements Serializable {
 			OrderResult bookTaken =inventory.take(ev.getBookTitle());
 			complete(ev,bookTaken);
 		});
+		initialized=true;
 	}
 
+	public boolean isInitialized() {
+		return initialized;
+	}
 }

@@ -46,10 +46,12 @@ public class ResourcesHolder {
      * 			{@link DeliveryVehicle} when completed.   
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
-		DeliveryVehicle vehicle = carsQueue.poll();
-
-	//	if (vehicle==null)	synchronized (lockResource) {}
-
+		DeliveryVehicle vehicle = null;
+		try {
+			vehicle = carsQueue.take();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		Future<DeliveryVehicle> future = new Future<>();
 		future.resolve(vehicle);
 		return future;

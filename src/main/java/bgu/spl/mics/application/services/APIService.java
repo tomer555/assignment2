@@ -6,14 +6,10 @@ import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.*;
-
 import java.io.Serializable;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Stream;
+
 
 /**
  * APIService is in charge of the connection between a client and the store.
@@ -31,6 +27,7 @@ public class APIService extends MicroService implements Serializable {
 	private int currentTick;
 	private int TickToSend;
 	private int index;
+	private boolean initialized;
 
 	public APIService(String name, List<OrderReceipt> orderSchedule, Customer customer) {
 		super(name);
@@ -40,6 +37,7 @@ public class APIService extends MicroService implements Serializable {
 		this.currentTick=0;
 		this.TickToSend=0;
 		this.index=0;
+		this.initialized=false;
 		//sorting list from smallest tick to last
 		orderSchedule.sort((order1,order2)->{
 			if (order1.getOrderTick()<order2.getOrderTick())
@@ -57,7 +55,9 @@ public class APIService extends MicroService implements Serializable {
 		//Subscribe to TickBroadcast
 		subscribeBroadcast(TickBroadcast.class, message->{
 			currentTick=message.getCurrentTick();
+
 			System.out.println(getName() +" got the time: "+currentTick);
+
 			while (index<orderSchedule.size() && currentTick==TickToSend){
 				OrderReceipt orderReceipt=orderSchedule.get(index);
 				Future<OrderReceipt> orderFuture = sendEvent(new BookOrderEvent(orderReceipt, customer));
@@ -74,12 +74,17 @@ public class APIService extends MicroService implements Serializable {
 						orderReceiptFutures.remove(readyReceipt);
 				});
 			}
+
 		});
+		System.out.println(getName() + " subscribed for Global Time");
 
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
-
+		initialized=true;
 	}
 
+	public boolean isInitialized() {
+		return initialized;
+	}
 }
 

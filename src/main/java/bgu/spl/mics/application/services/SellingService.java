@@ -19,10 +19,12 @@ import java.io.Serializable;
 public class SellingService extends MicroService implements Serializable {
 	private MoneyRegister moneyRegister;
 	private int currentTick;
+	private boolean initialized;
 	public SellingService(String name,MoneyRegister moneyRegister) {
 		super(name);
 		this.moneyRegister=moneyRegister;
-		this.currentTick=1;
+		this.currentTick=0;
+		this.initialized =false;
 	}
 
 	@Override
@@ -67,7 +69,10 @@ public class SellingService extends MicroService implements Serializable {
 			else
 				complete(ev,null);
 		});
-		
+		initialized=true;
 	}
 
+	public boolean isInitialized() {
+		return initialized;
+	}
 }

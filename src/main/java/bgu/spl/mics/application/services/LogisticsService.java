@@ -17,11 +17,10 @@ import java.io.Serializable;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class LogisticsService extends MicroService implements Serializable {
-
+	private boolean initialized;
 	public LogisticsService(String name) {
 		super(name);
-
-
+		this.initialized =false;
 	}
 
 	@Override
@@ -43,7 +42,11 @@ public class LogisticsService extends MicroService implements Serializable {
 			sendEvent(new ReturnCarEvent(car));
 
 		});
+		initialized=true;
 		
 	}
 
+	public boolean isInitialized() {
+		return initialized;
+	}
 }
