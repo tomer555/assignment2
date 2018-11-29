@@ -1,8 +1,5 @@
 package bgu.spl.mics.application.passiveObjects;
-
 import bgu.spl.mics.Future;
-import bgu.spl.mics.application.messages.ReturnCarEvent;
-
 import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;

@@ -30,7 +30,11 @@ public class SellingService extends MicroService implements Serializable {
 
 
 		//Subscribe to TickBroadcast
-		subscribeBroadcast(TickBroadcast.class,message->currentTick=message.getCurrentTick());
+		subscribeBroadcast(TickBroadcast.class,message->
+		{
+			currentTick=message.getCurrentTick();
+			System.out.println(getName() +" got the time :"+currentTick);
+		});
 
 
 		//Subscribe To Termination

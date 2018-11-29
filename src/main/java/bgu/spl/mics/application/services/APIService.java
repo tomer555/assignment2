@@ -57,6 +57,7 @@ public class APIService extends MicroService implements Serializable {
 		//Subscribe to TickBroadcast
 		subscribeBroadcast(TickBroadcast.class, message->{
 			currentTick=message.getCurrentTick();
+			System.out.println(getName() +" got the time: "+currentTick);
 			while (index<orderSchedule.size() && currentTick==TickToSend){
 				OrderReceipt orderReceipt=orderSchedule.get(index);
 				Future<OrderReceipt> orderFuture = sendEvent(new BookOrderEvent(orderReceipt, customer));
@@ -68,7 +69,7 @@ public class APIService extends MicroService implements Serializable {
 			if(!orderReceiptFutures.isEmpty()){
 				orderReceiptFutures.stream().filter(Future::isDone).forEach((readyReceipt)->{
 						OrderReceipt receipt = readyReceipt.get();
-						if (receipt != null)
+						if (receipt!= null)
 							sendEvent(new DeliveryEvent(customer));
 						orderReceiptFutures.remove(readyReceipt);
 				});

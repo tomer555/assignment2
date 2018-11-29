@@ -17,10 +17,10 @@ import java.io.Serializable;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class LogisticsService extends MicroService implements Serializable {
-	private int currentTick;
+
 	public LogisticsService(String name) {
 		super(name);
-		this.currentTick=1;
+
 
 	}
 

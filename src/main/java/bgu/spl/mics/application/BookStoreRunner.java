@@ -50,6 +50,8 @@ public class BookStoreRunner {
         int resourceAmount= services.getResourcesService();
 
 
+
+
         //--------------Creating Sellers--------------------
         for(int i=1;i<=sellersAmount;i++){
             SellingService seller=new SellingService("seller "+i,moneyRegister);
@@ -79,13 +81,20 @@ public class BookStoreRunner {
             Tresource.start();
         }
 
+
+
         //-----Parsing Time-------
         time parsedTime=services.getTime();
 
         //Creating Singleton TimeService
         TimeService globalTimer=new TimeService("Global Timer",parsedTime.getSpeed(),parsedTime.getDuration());
         Thread timeThread=new Thread(globalTimer);
-        timeThread.start();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        timeThread.run();
 
 
         System.exit(0);

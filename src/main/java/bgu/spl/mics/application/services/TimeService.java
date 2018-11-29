@@ -1,5 +1,4 @@
 package bgu.spl.mics.application.services;
-import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
@@ -38,7 +37,8 @@ public class TimeService extends MicroService{
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
-				if(ticks<=duration)
+                System.out.println("Global time :"+ticks);
+				if(ticks<duration)
 					sendBroadcast(new TickBroadcast(ticks));
 				else {
 					sendBroadcast(new TerminationBroadcast());
