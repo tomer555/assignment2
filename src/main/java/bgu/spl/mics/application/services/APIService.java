@@ -4,11 +4,13 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BookOrderEvent;
 import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.*;
 
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Stream;
@@ -24,61 +26,59 @@ import java.util.stream.Stream;
  */
 public class APIService extends MicroService implements Serializable {
 	private List<OrderReceipt> orderSchedule;
-	private List<Future<OrderReceipt>> orderReceiptFutures;
-	private BlockingQueue<Future<OrderReceipt>> doneReceiptFutures;
+	private Vector<Future<OrderReceipt>> orderReceiptFutures;
 	private Customer customer;
+	private int currentTick;
+	private int TickToSend;
+	private int index;
+
 	public APIService(String name, List<OrderReceipt> orderSchedule, Customer customer) {
 		super(name);
 		this.orderSchedule=orderSchedule;
-		this.orderReceiptFutures=new LinkedList<>();
-		this.doneReceiptFutures=new LinkedBlockingQueue<>();
+		this.orderReceiptFutures=new Vector<>();
 		this.customer=customer;
-	}
-
-	@Override
-	protected void initialize() {
-
-		//Subscribe To Termination
-		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
-
-
+		this.currentTick=0;
+		this.TickToSend=0;
+		this.index=0;
+		//sorting list from smallest tick to last
 		orderSchedule.sort((order1,order2)->{
 			if (order1.getOrderTick()<order2.getOrderTick())
 				return 1;
 			else
 				return 0;
 		});
-		for (OrderReceipt order:orderSchedule) {
-			Future<OrderReceipt> orderFuture = sendEvent(new BookOrderEvent(order, customer));
-			orderReceiptFutures.add(orderFuture);
+		if(!orderSchedule.isEmpty()){
+			TickToSend=orderSchedule.get(0).getOrderTick();
 		}
-		Thread doneFutures=new Thread(()->{
-			while (!orderReceiptFutures.isEmpty()){
-				Stream<Future<OrderReceipt>> stream=orderReceiptFutures.stream();
-				stream.filter(Future::isDone).forEach((future)->{
-					doneReceiptFutures.add(future);
-					orderReceiptFutures.remove(future);
+	}
+
+	@Override
+	protected void initialize() {
+		//Subscribe to TickBroadcast
+		subscribeBroadcast(TickBroadcast.class, message->{
+			currentTick=message.getCurrentTick();
+			while (index<orderSchedule.size() && currentTick==TickToSend){
+				OrderReceipt orderReceipt=orderSchedule.get(index);
+				Future<OrderReceipt> orderFuture = sendEvent(new BookOrderEvent(orderReceipt, customer));
+				orderReceiptFutures.add(orderFuture);
+				if(++index<orderSchedule.size())
+					TickToSend=orderSchedule.get(index).getOrderTick();
+			}
+
+			if(!orderReceiptFutures.isEmpty()){
+				orderReceiptFutures.stream().filter(Future::isDone).forEach((readyReceipt)->{
+						OrderReceipt receipt = readyReceipt.get();
+						if (receipt != null)
+							sendEvent(new DeliveryEvent(customer));
+						orderReceiptFutures.remove(readyReceipt);
 				});
 			}
 		});
 
-		doneFutures.start();
-		while (!orderReceiptFutures.isEmpty()){
-			Future<OrderReceipt> readyReceipt= doneReceiptFutures.poll();
-			if(readyReceipt!=null) {
-				OrderReceipt receipt = readyReceipt.get();
-				if (receipt != null)
-					sendEvent(new DeliveryEvent(customer));
-			}
-		}
+		//Subscribe To Termination
+		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
 
-
-
-
-
-
-
-		
 	}
 
 }
+
