@@ -53,14 +53,16 @@ public class SellingService extends MicroService implements Serializable {
 			Future<Integer> bookPriceFuture=sendEvent(new CheckAvailabilityEvent(bookTitle));
 			int bookPrice=bookPriceFuture.get();
 			receipt.setPrice(bookPrice);
-
+			System.out.println(getName() +" got an answer an the book costs: "+bookPrice);
 			if(bookPrice!=-1 && customer.getAvailableCreditAmount()>=bookPrice){
+				System.out.println(getName() +"confirmed that the customer has enough money and sending to InventoryService");
 				Future<OrderResult> acquireBookFuture=sendEvent(new AcquireBookEvent(bookTitle));
 				OrderResult acquireBook=acquireBookFuture.get();
 				if(acquireBook==OrderResult.SUCCESSFULLY_TAKEN){
 					moneyRegister.chargeCreditCard(customer,bookPrice);
 					receipt.setIssuedTick(currentTick);
 					moneyRegister.file(receipt);
+					complete(ev,receipt);
 				}
 				else{
 					complete(ev,null);

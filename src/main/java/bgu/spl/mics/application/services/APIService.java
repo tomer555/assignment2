@@ -66,14 +66,33 @@ public class APIService extends MicroService implements Serializable {
 					TickToSend=orderSchedule.get(index).getOrderTick();
 			}
 
-			if(!orderReceiptFutures.isEmpty()){
-				orderReceiptFutures.stream().filter(Future::isDone).forEach((readyReceipt)->{
+				for(int i=0;i<orderReceiptFutures.size();i++){
+                    Future<OrderReceipt> future =orderReceiptFutures.get(i);
+				    if(future.isDone()) {
+                        OrderReceipt receipt = future.get();
+                        if(receipt!=null) {
+                            System.out.println(getName()+" successfully got back the receipt of book: "+receipt.getBookTitle()+", Order tick: "+
+                            receipt.getOrderTick()+", process Tick : "+receipt.getProcessTick()+", issued Tick: "+receipt.getIssuedTick());
+                            sendEvent(new DeliveryEvent(customer));
+                        }
+                        orderReceiptFutures.remove(i);
+                        i--;
+                    }
+
+                }
+
+
+
+			/*
+			orderReceiptFutures.stream().filter(Future::isDone).forEach((readyReceipt)->{
 						OrderReceipt receipt = readyReceipt.get();
 						if (receipt!= null)
 							sendEvent(new DeliveryEvent(customer));
 						orderReceiptFutures.remove(readyReceipt);
 				});
-			}
+
+
+			 */
 
 		});
 		System.out.println(getName() + " subscribed for Global Time");

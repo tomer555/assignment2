@@ -42,15 +42,12 @@ public class InventoryService extends MicroService implements Serializable {
 
 
 			System.out.println(getName()+ " got CheckAvailabilityEvent of book: "+ev.getBookTitle()+" to check");
-
-
-
 			Integer bookPrice = inventory.checkAvailabilityAndGetPrice(ev.getBookTitle());
 			complete(ev, bookPrice);
 		});
 
 		subscribeEvent(AcquireBookEvent.class,ev->{
-			System.out.println(getName()+ "got AcquireBookEvent of book: "+ev.getBookTitle()+" to acquire");
+			System.out.println(getName()+ " got AcquireBookEvent of book: "+ev.getBookTitle()+" to acquire");
 			OrderResult bookTaken =inventory.take(ev.getBookTitle());
 			complete(ev,bookTaken);
 		});

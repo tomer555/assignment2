@@ -20,6 +20,7 @@ public class MessageBusImpl implements MessageBus {
 
 
 
+
 	//A Thread safe constructor
 	private MessageBusImpl() {
 		this.queueMap = new ConcurrentHashMap<>();
@@ -46,24 +47,26 @@ public class MessageBusImpl implements MessageBus {
 
 
 
-	private <T> void subscribeMessage(Class<? extends Message> type,MicroService m){
-		boolean found = false;
-		for (Map.Entry<Class<?>, BlockingQueue<MicroService>> message : messageSubscribersMap.entrySet()) {
-			if (type.isAssignableFrom(message.getKey())) {
-				try {
-					message.getValue().put(m);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+	private void subscribeMessage(Class<? extends Message> type,MicroService m){
+		synchronized (type) {
+			boolean found = false;
+			for (Map.Entry<Class<?>, BlockingQueue<MicroService>> message : messageSubscribersMap.entrySet()) {
+				if (type.isAssignableFrom(message.getKey())) {
+					try {
+						message.getValue().put(m);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					found = true;
+					break;
 				}
-				found = true;
-				break;
 			}
-		}
-		if (!found) {
-			BlockingQueue<MicroService> toInsert = new LinkedBlockingQueue<>();
-			toInsert.add(m);
-			messageSubscribersMap.put(type, toInsert);
+			if (!found) {
+				BlockingQueue<MicroService> toInsert = new LinkedBlockingQueue<>();
+				toInsert.add(m);
+				messageSubscribersMap.put(type, toInsert);
 
+			}
 		}
 
 

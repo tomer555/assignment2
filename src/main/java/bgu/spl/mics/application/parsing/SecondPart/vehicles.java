@@ -1,8 +1,9 @@
 package bgu.spl.mics.application.parsing.SecondPart;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-public class vehicles {
 
+
+public class vehicles {
     @SerializedName("license")
     @Expose
     private int license;

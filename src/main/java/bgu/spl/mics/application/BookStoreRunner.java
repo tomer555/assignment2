@@ -1,9 +1,10 @@
 package bgu.spl.mics.application;
 import bgu.spl.mics.MessageBus;
 import bgu.spl.mics.MessageBusImpl;
-import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.parsing.FirstPart.initialInventory;
 import bgu.spl.mics.application.parsing.JsonReader;
+import bgu.spl.mics.application.parsing.SecondPart.initialResources;
+import bgu.spl.mics.application.parsing.SecondPart.vehicles;
 import bgu.spl.mics.application.parsing.ThirdPart.*;
 import bgu.spl.mics.application.passiveObjects.*;
 import bgu.spl.mics.application.services.*;
@@ -25,13 +26,10 @@ public class BookStoreRunner {
         FileReader fileReader=new FileReader(file);
         Gson gson=new Gson();
         JsonReader reader= gson.fromJson(fileReader,JsonReader.class);
+        MessageBus bus=MessageBusImpl.getInstance();
         //------------services lists-----------------------
 
-        List<SellingService> sellingServices=new LinkedList<>();
-        List<APIService> apiServices=new LinkedList<>();
-        List<LogisticsService>logisticServices=new LinkedList<>();
-        List<ResourceService>resourceServices=new LinkedList<>();
-        List<InventoryService> inventorieServices=new LinkedList<>();
+
 
         //Creating Singleton Classes
         Inventory library=Inventory.getInstance();
@@ -48,7 +46,7 @@ public class BookStoreRunner {
         services services=reader.getServices();
 
         //Parsed Customers+Api Services
-        ParseCustomerAndApi(reader,services,apiServices);
+        ParseCustomerAndApi(reader,services);
 
 
         //--------Parsing Service Amounts---------------
@@ -63,7 +61,6 @@ public class BookStoreRunner {
         //--------------Creating Sellers--------------------
         for(int i=1;i<=sellersAmount;i++){
             SellingService seller=new SellingService("seller "+i,moneyRegister);
-            sellingServices.add(seller);
             Thread Tseller=new Thread(seller);
             Tseller.start();
 
@@ -72,7 +69,6 @@ public class BookStoreRunner {
         //------------Creating Logistics------------
         for(int i=1;i<=logisticAmount;i++){
             LogisticsService logistic=new LogisticsService("logistic "+i);
-            logisticServices.add(logistic);
             Thread Tlogistic=new Thread(logistic);
             Tlogistic.start();
         }
@@ -80,15 +76,13 @@ public class BookStoreRunner {
         //------------Creating InventoryServices------------
         for(int i=1;i<=inventoryAmount;i++){
             InventoryService inventoryService=new InventoryService("inventoryService "+i,library);
-            inventorieServices.add(inventoryService);
             Thread Tinventory=new Thread(inventoryService);
             Tinventory.start();
         }
 
         //------------Creating ResourceServices------------
         for(int i=1;i<=resourceAmount;i++){
-            ResourceService service=new ResourceService("logistic "+i,resources);
-            resourceServices.add(service);
+            ResourceService service=new ResourceService("resource "+i,resources);
             Thread Tresource=new Thread(service);
             Tresource.start();
         }
@@ -102,26 +96,23 @@ public class BookStoreRunner {
         //Creating Singleton TimeService
         TimeService globalTimer=new TimeService("Global Timer",parsedTime.getSpeed(),parsedTime.getDuration());
         Thread timeThread=new Thread(globalTimer);
+        timeThread.run();
 
-        while (true){
-            boolean sellReady=sellingServices.stream().allMatch((m)->m.isInitialized());
-            boolean apiReady=apiServices.stream().allMatch((m)->m.isInitialized());
-            boolean recReady=resourceServices.stream().allMatch((m)->m.isInitialized());
-            boolean logReady=logisticServices.stream().allMatch((m)->m.isInitialized());
-            boolean invReady=inventorieServices.stream().allMatch((m)->m.isInitialized());
-            if(sellReady && recReady && apiReady &&logReady &&invReady) {
-                timeThread.run();
-                break;
-            }
+        try {
+            timeThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
-
-
         System.exit(0);
-
     }
 
-    private static void ParseCustomerAndApi(JsonReader reader, services services,List<APIService> microServiceList){
+
+
+
+
+
+
+    private static void ParseCustomerAndApi(JsonReader reader, services services){
         List<customers> parsedCustomers= services.getCustomers();
         List<Customer> customers= new LinkedList<>();
         parsedCustomers.forEach((c)->{
@@ -135,7 +126,6 @@ public class BookStoreRunner {
                 orderReceipts.add(receipt);
             });
             APIService apiService=new APIService("API: "+customer.getName(),orderReceipts,customer);
-            microServiceList.add(apiService);
             Thread Tapi=new Thread(apiService);
             Tapi.start();
         });
@@ -143,16 +133,22 @@ public class BookStoreRunner {
 
 
     private static void addVehiclesToResource(JsonReader reader, ResourcesHolder resources){
-        List<bgu.spl.mics.application.parsing.SecondPart.vehicles> parsedCars=reader.getCars();
-        DeliveryVehicle[] array=new DeliveryVehicle[parsedCars.size()];
-        for(int i=0;i<array.length;i++){
-            bgu.spl.mics.application.parsing.SecondPart.vehicles d =parsedCars.get(i);
-            array[i]=new DeliveryVehicle(d.getLicense(),d.getSpeed());
+        List<initialResources> parsedCars=reader.getVehicles();
+        initialResources v=parsedCars.get(0);
+        List<vehicles> cars=v.getVehicles();
+        DeliveryVehicle[] array = new DeliveryVehicle[cars.size()];
+        for (vehicles d: cars) {
+            for (int i = 0; i < array.length; i++) {
+                array[i] = new DeliveryVehicle(d.getLicense(), d.getSpeed());
+            }
         }
-        if(resources!=null){ ;
+        if(resources!=null){
             resources.load(array);
         }
+
     }
+
+
 
 
 

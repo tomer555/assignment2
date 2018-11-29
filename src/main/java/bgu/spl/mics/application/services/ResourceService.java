@@ -39,10 +39,10 @@ public class ResourceService extends MicroService implements Serializable {
 
 
 		subscribeEvent(AcquireCarEvent.class,ev->{
-
+			System.out.println(getName() + "got a demand for a Vehicle");
 			Future <DeliveryVehicle> deliveryVehicleFuture=resourcesHolder.acquireVehicle();
 			DeliveryVehicle deliveryVehicle= deliveryVehicleFuture.get();
-
+			System.out.println(getName()+ " Found a Car!!");
 			//that one will change my first future from the logistic. we have created 2 futures. resourceholder(GC AUTO) and messagebus(complete)
 			complete(ev,deliveryVehicle);
 		});
@@ -50,6 +50,7 @@ public class ResourceService extends MicroService implements Serializable {
 		subscribeEvent(ReturnCarEvent.class,ev->{
 
 			resourcesHolder.releaseVehicle(ev.getCarToReturn());
+			System.out.println(getName() +" got back car: "+ev.getCarToReturn().getLicense()+" got returned");
 		});
 
 		initialized=true;

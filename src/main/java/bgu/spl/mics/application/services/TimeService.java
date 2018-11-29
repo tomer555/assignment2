@@ -42,8 +42,9 @@ public class TimeService extends MicroService{
 					sendBroadcast(new TickBroadcast(ticks));
 				else {
 					sendBroadcast(new TerminationBroadcast());
-					timer.cancel();
 					terminate();
+					timer.cancel();
+
 				}
 				ticks++;
 			}

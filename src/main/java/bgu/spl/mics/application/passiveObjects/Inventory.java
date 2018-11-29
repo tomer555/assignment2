@@ -67,7 +67,7 @@ public class Inventory {
      */
 	public OrderResult take (String book) {
 
-		if (checkAvailabilityAndGetPrice(book)==-1)
+		if (checkAvailabilityAndGetPrice(book)!=-1)
 			for (BookInventoryInfo bookToFind:listOfBooks) {
 				if (bookToFind.getBookTitle().equals(book)) {
 					bookToFind.setAmountInInventory(bookToFind.getAmountInInventory() - 1);

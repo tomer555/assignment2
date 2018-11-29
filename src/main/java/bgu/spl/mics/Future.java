@@ -41,11 +41,13 @@ public class Future<T> {
 		if (resolved)
 		    return result;
 		while (!resolved){
-            try {
-                resultLock.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+			synchronized (resultLock) {
+				try {
+					resultLock.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
         }
         return result;
 	}
@@ -93,15 +95,16 @@ public class Future<T> {
 
 	public T get(long timeout, TimeUnit unit) {
         long sleepMillis=unit.toMillis(timeout);
-        synchronized (resultLock) {
-            try {
-                resultLock.wait(sleepMillis);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        if(resolved)
-            return result;
+		if(resolved)
+			return result;
+		try {
+			resultLock.wait(sleepMillis);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		if(resolved)
+			return result;
         else
             return null;
     }

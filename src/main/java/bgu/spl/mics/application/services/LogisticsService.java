@@ -31,14 +31,18 @@ public class LogisticsService extends MicroService implements Serializable {
 
 
 		subscribeEvent(DeliveryEvent.class,ev->{
+			System.out.println(getName()+" got new Delivery to customer: "+ev.getCustomer().getName());
 			//getting a reference to the messageBus's future
+			System.out.println(getName()+"asking Recourse Service to acquire a car");
 			Future<DeliveryVehicle> deliveryEventFuture=sendEvent(new AcquireCarEvent());
 			//waiting for that future to resolve
 			DeliveryVehicle car= deliveryEventFuture.get();
+			System.out.println(getName() + " got the car to deliver: "+car.getLicense());
 			Customer customer=ev.getCustomer();
 
 			car.deliver(customer.getAddress(), customer.getDistance());
-
+			System.out.println(getName() +" confirmed that car: "+car.getLicense()+" delivered to: "+ev.getCustomer().getAddress());
+			System.out.println(getName()+" returning car to Resource Service");
 			sendEvent(new ReturnCarEvent(car));
 
 		});
