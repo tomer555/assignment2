@@ -43,6 +43,7 @@ public class TimeService extends MicroService{
 				if(ticks<duration)
 					sendBroadcast(new TickBroadcast(ticks));
 				else {
+					sendBroadcast(new TickBroadcast(ticks));
 					sendBroadcast(new TerminationBroadcast());
 					synchronized (lockMain) {
 						terminate();

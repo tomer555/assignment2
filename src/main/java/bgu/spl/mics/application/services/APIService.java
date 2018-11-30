@@ -49,6 +49,14 @@ public class APIService extends MicroService implements Serializable {
 		}
 	}
 
+	private void lastCall(){
+
+
+
+
+
+	}
+
 	@Override
 	protected void initialize() {
 		//Subscribe to TickBroadcast
@@ -64,6 +72,8 @@ public class APIService extends MicroService implements Serializable {
 				if(++index<orderSchedule.size())
 					TickToSend=orderSchedule.get(index).getOrderTick();
 			}
+
+
 
 				for(int i=0;i<orderReceiptFutures.size();i++){
                     Future<OrderReceipt> future =orderReceiptFutures.get(i);
@@ -81,7 +91,7 @@ public class APIService extends MicroService implements Serializable {
 		});
 
 		//Subscribe To Termination
-		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
+		subscribeBroadcast(TerminationBroadcast.class, message->  this.terminate());
 
 	}
 }

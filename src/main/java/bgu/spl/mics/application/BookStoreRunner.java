@@ -109,7 +109,6 @@ public class BookStoreRunner {
             }
         }
 
-        threadList.forEach(Thread::interrupt);
         //Prints Program output into files
         //print to file all customers in hashmap args[1]
         //library.printInventoryToFile(args[2]);
