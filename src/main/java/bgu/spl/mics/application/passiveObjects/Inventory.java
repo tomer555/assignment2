@@ -114,7 +114,7 @@ public class Inventory {
 			serializedMap.put(book.getBookTitle(),book.getAmountInInventory());
 		}
 		try{
-			FileOutputStream fileOut=new FileOutputStream(filename+".txt");
+			FileOutputStream fileOut=new FileOutputStream(filename);
 			ObjectOutputStream out =new ObjectOutputStream(fileOut);
 			out.writeObject(serializedMap);
 			out.close();

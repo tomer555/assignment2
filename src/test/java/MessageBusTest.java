@@ -9,6 +9,7 @@ import bgu.spl.mics.example.messages.ExampleEvent;
 import bgu.spl.mics.example.services.ExampleBroadcastListenerService;
 import bgu.spl.mics.example.services.ExampleEventHandlerService;
 import bgu.spl.mics.example.services.ExampleMessageSenderService;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +47,19 @@ public class MessageBusTest {
         //Initialize private MessageBus fields
         InitializeFields();
     }
+
+    @After
+    public void tearDown(){
+        this.bus=null;
+        this.broadcastListener=null;
+        this.eventHandler=null;
+        this.messageHandler=null;
+        this.queueMap=null;
+        this.messageSubscribersMap=null;
+        this.futuresMap=null;
+    }
+
+
     protected void InitializeFields() throws ClassNotFoundException, NoSuchFieldException {
         this.queueMap=Class.forName("bgu.spl.mics.MessageBusImpl").getDeclaredField("queueMap");
         this.messageSubscribersMap=Class.forName("bgu.spl.mics.MessageBusImpl").getDeclaredField("messageSubscribersMap");
@@ -91,7 +105,9 @@ public class MessageBusTest {
      * This is a Unit Test for the {@link MessageBus#complete(Event, Object)} interface.
      *
      * */
+
     @Test
+    @SuppressWarnings("unchecked")
     public void complete() {
         Future<String> future=new Future<>();
         try {
@@ -203,8 +219,13 @@ public class MessageBusTest {
     public void awaitMessage() {
         MicroService m2=new ExampleBroadcastListenerService("brod2",new String[] {"2"});
         AtomicReference<Message> message=new AtomicReference<>();
-        Thread t1=new Thread(()->m2.run());
+        Thread t1=new Thread(m2);
         Thread t2=new Thread(()->{
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             Broadcast brodcast=new ExampleBroadcast("test");
             bus.sendBroadcast(brodcast);});
 
