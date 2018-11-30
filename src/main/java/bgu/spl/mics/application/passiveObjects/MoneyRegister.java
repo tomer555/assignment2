@@ -76,7 +76,7 @@ public class MoneyRegister {
      */
 	public void printOrderReceipts(String filename) {
 		try{
-			FileOutputStream fileOut=new FileOutputStream(filename+".txt");
+			FileOutputStream fileOut=new FileOutputStream(filename);
 			ObjectOutputStream out =new ObjectOutputStream(fileOut);
 			out.writeObject(orderReceiptList);
 			out.close();

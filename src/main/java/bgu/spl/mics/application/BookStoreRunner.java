@@ -24,7 +24,7 @@ public class BookStoreRunner {
 
     public static void main(String[] args) throws FileNotFoundException {
         //--------------Connection to json input file --------------------
-        File file = new File("input.json");
+        File file = new File(args[0]);
         FileReader fileReader = new FileReader(file);
         Gson gson = new Gson();
         JsonReader reader = gson.fromJson(fileReader, JsonReader.class);
@@ -110,6 +110,11 @@ public class BookStoreRunner {
         }
 
         threadList.forEach(Thread::interrupt);
+        //Prints Program output into files
+        //print to file all customers in hashmap args[1]
+        library.printInventoryToFile(args[2]);
+        moneyRegister.printOrderReceipts(args[3]);
+        //prints Money register object args[4]
 
 
         System.exit(0);
