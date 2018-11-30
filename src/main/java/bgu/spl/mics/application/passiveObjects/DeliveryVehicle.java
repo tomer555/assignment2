@@ -41,7 +41,7 @@ public class DeliveryVehicle {
 	public void deliver(String address, int distance) {
 		inUse=true;
 		try {
-			Thread.sleep(2*distance*speed);
+			Thread.sleep(2*distance*speed); 
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

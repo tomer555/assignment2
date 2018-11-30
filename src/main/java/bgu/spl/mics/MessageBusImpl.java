@@ -47,34 +47,26 @@ public class MessageBusImpl implements MessageBus {
 
 
 
-	private void subscribeMessage(Class<? extends Message> type,MicroService m){
-            synchronized (type) {
-                boolean found = false;
-                for (Map.Entry<Class<?>, BlockingQueue<MicroService>> message : messageSubscribersMap.entrySet()) {
-                    if (type.isAssignableFrom(message.getKey())) {
-                        try {
-                            message.getValue().put(m);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        found = true;
-                        break;
-                    }
-                }
+	private void subscribeMessage(Class<? extends Message> type,MicroService m) {
+		synchronized (type) {
+			if (messageSubscribersMap.containsKey(type)) {
+				try {
+					messageSubscribersMap.get(type).put(m);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			} else {
+				BlockingQueue<MicroService> toInsert = new LinkedBlockingQueue<>();
+				try {
+					toInsert.put(m);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				messageSubscribersMap.put(type, toInsert);
 
-                if (!found) {
-                    BlockingQueue<MicroService> toInsert = new LinkedBlockingQueue<>();
-                    try {
-                        toInsert.put(m);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    messageSubscribersMap.put(type, toInsert);
-
-                }
-            }
+			}
 		}
-
+	}
 
 
 	/**
