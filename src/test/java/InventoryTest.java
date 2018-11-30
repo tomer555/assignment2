@@ -88,8 +88,8 @@ public class InventoryTest {
 
     @Test
     public void printInventoryToFile() {
-     // Assert.assertEquals(instance.printInventoryToFile("name4"),"kk");
-
+        instance.load(inventory);
+    instance.printInventoryToFile("src/test/java/output.txt");
     }
 }
 /*
