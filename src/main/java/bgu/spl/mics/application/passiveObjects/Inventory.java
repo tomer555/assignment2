@@ -66,17 +66,14 @@ public class Inventory {
      * 			second should reduce by one the number of books of the desired type.
      */
 	public OrderResult take (String book) {
-
-
-
-
-		if (checkAvailabiltyAndGetPrice(book)==-1)
+		if (checkAvailabilityAndGetPrice(book)!=-1)
 			for (BookInventoryInfo bookToFind:listOfBooks) {
 				if (bookToFind.getBookTitle().equals(book)) {
 					int val;
 					do {
 						val = bookToFind.getAmountInInventory();
-					}while (!bookToFind.getAtomicAmountInInventory().compareAndSet(val, val -1));
+					}
+					while (!bookToFind.getAtomicAmountInInventory().compareAndSet(val, val -1));
 
 					return OrderResult.SUCCESSFULLY_TAKEN;
 				}
@@ -92,16 +89,16 @@ public class Inventory {
      * @param book 		Name of the book.
      * @return the price of the book if it is available, -1 otherwise.
      */
-	public int checkAvailabiltyAndGetPrice(String book) {
-		if (listOfBooks.contains(book))
+	public int checkAvailabilityAndGetPrice(String book) {
+
 			for (BookInventoryInfo bookToFind:listOfBooks) {
-				if (bookToFind.getBookTitle().equals(book)&bookToFind.getAmountInInventory()>=1) {
+				String bookName=bookToFind.getBookTitle();
+				if (bookName.equals(book) && bookToFind.getAmountInInventory()>=1) {
 					return bookToFind.getPrice();
 				}
-				else return -1;
-	}
+	 		}
 			return -1;
-				}
+	}
 
 	/**
      * 
