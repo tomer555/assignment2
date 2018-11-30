@@ -23,11 +23,9 @@ import java.io.Serializable;
  */
 public class ResourceService extends MicroService implements Serializable {
 	private ResourcesHolder resourcesHolder;
-	private boolean initialized;
 	public ResourceService(String name,ResourcesHolder resourcesHolder) {
 		super(name);
 		this.resourcesHolder=resourcesHolder;
-		this.initialized =false;
 
 	}
 
@@ -53,11 +51,5 @@ public class ResourceService extends MicroService implements Serializable {
 			System.out.println(getName() +" got back car: "+ev.getCarToReturn().getLicense()+" got returned");
 		});
 
-		initialized=true;
-
-	}
-
-	public boolean isInitialized() {
-		return initialized;
 	}
 }

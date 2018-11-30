@@ -9,7 +9,6 @@ package bgu.spl.mics.application.passiveObjects;
 public class DeliveryVehicle {
 	private int license;
 	private int speed;
-	private int timeToRemain;
 	private boolean inUse;
 	/**
      * Constructor.   
@@ -42,20 +41,12 @@ public class DeliveryVehicle {
 	public void deliver(String address, int distance) {
 		inUse=true;
 		try {
-			Thread.sleep(distance*speed);
+			Thread.sleep(2*distance*speed);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		inUse=false;
 
-	}
-
-	public int getTimeToRemain() {
-		return timeToRemain;
-	}
-
-	public void setTimeToRemain(int timeToRemain) {
-		this.timeToRemain = timeToRemain;
 	}
 
 }

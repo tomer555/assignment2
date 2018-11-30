@@ -24,8 +24,10 @@ public class TimeService extends MicroService{
 	private int duration;
 	private Timer timer;
 	private int ticks;
-	public TimeService(String name ,int speed,int duration) {
+	private final Object lockMain;
+	public TimeService(String name,Object lockMain , int speed,int duration) {
 		super(name);
+		this.lockMain=lockMain;
 		this.speed=speed;
 		this.duration=duration;
 		this.timer=new Timer();
@@ -42,9 +44,11 @@ public class TimeService extends MicroService{
 					sendBroadcast(new TickBroadcast(ticks));
 				else {
 					sendBroadcast(new TerminationBroadcast());
-					terminate();
-					timer.cancel();
-
+					synchronized (lockMain) {
+						terminate();
+						timer.cancel();
+						lockMain.notify();
+					}
 				}
 				ticks++;
 			}

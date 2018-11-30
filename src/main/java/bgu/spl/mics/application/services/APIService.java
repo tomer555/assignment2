@@ -27,7 +27,7 @@ public class APIService extends MicroService implements Serializable {
 	private int currentTick;
 	private int TickToSend;
 	private int index;
-	private boolean initialized;
+
 
 	public APIService(String name, List<OrderReceipt> orderSchedule, Customer customer) {
 		super(name);
@@ -37,7 +37,6 @@ public class APIService extends MicroService implements Serializable {
 		this.currentTick=0;
 		this.TickToSend=0;
 		this.index=0;
-		this.initialized=false;
 		//sorting list from smallest tick to last
 		orderSchedule.sort((order1,order2)->{
 			if (order1.getOrderTick()<order2.getOrderTick())
@@ -78,32 +77,12 @@ public class APIService extends MicroService implements Serializable {
                         orderReceiptFutures.remove(i);
                         i--;
                     }
-
                 }
-
-
-
-			/*
-			orderReceiptFutures.stream().filter(Future::isDone).forEach((readyReceipt)->{
-						OrderReceipt receipt = readyReceipt.get();
-						if (receipt!= null)
-							sendEvent(new DeliveryEvent(customer));
-						orderReceiptFutures.remove(readyReceipt);
-				});
-
-
-			 */
-
 		});
-		System.out.println(getName() + " subscribed for Global Time");
 
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
-		initialized=true;
-	}
 
-	public boolean isInitialized() {
-		return initialized;
 	}
 }
 
