@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.passiveObjects;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive data-object representing a information about a certain book in the inventory.
@@ -10,13 +11,13 @@ import java.io.Serializable;
  */
 public class BookInventoryInfo implements Serializable {
 	private String bookTitle;
-	private int amountInInventory;
+	private AtomicInteger amountInInventory;
 	private int price;
 
 
 	public BookInventoryInfo(String bookTitle,int amountInInventory,int price){
 		this.bookTitle=bookTitle;
-		this.amountInInventory=amountInInventory;
+		this.amountInInventory=new AtomicInteger(amountInInventory);
 		this.price=price;
 	}
 	/**
@@ -31,8 +32,11 @@ public class BookInventoryInfo implements Serializable {
      * <p>
      * @return amount of available books.      
      */
-	public int getAmountInInventory() { return amountInInventory; }
-	public void setAmountInInventory(int newAmount) {  amountInInventory=newAmount; }
+	public int getAmountInInventory() { return amountInInventory.get(); }
+
+	public AtomicInteger getAtomicAmountInInventory() { return this.amountInInventory; }
+
+	public void setAmountInInventory(int newAmount) {  amountInInventory.set(newAmount); }
 
 
 	/**

@@ -6,7 +6,6 @@ import bgu.spl.mics.application.messages.AcquireCarEvent;
 import bgu.spl.mics.application.messages.ReturnCarEvent;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
-import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
