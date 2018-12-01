@@ -50,6 +50,21 @@ public class MessageBusTest {
 
     @After
     public void tearDown(){
+        this.queueMap.setAccessible(true);
+        this.futuresMap.setAccessible(true);
+        this.messageSubscribersMap.setAccessible(true);
+        try {
+            this.futuresMap.set(bus,new ConcurrentHashMap<>());
+            this.messageSubscribersMap.set(bus,new ConcurrentHashMap<>());
+            this.queueMap.set(bus,new ConcurrentHashMap<>());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+
+        this.futuresMap.setAccessible(false);
+        this.messageSubscribersMap.setAccessible(false);
+        this.queueMap.setAccessible(false);
         this.bus=null;
         this.broadcastListener=null;
         this.eventHandler=null;
@@ -218,21 +233,25 @@ public class MessageBusTest {
     @Test
     public void awaitMessage() {
         MicroService m2=new ExampleBroadcastListenerService("brod2",new String[] {"2"});
-        AtomicReference<Message> message=new AtomicReference<>();
-        Thread t1=new Thread(m2);
+        bus.register(m2);
+        bus.subscribeBroadcast(ExampleBroadcast.class,m2);
+        Broadcast toSend=new ExampleBroadcast("test");
         Thread t2=new Thread(()->{
             try {
-                Thread.sleep(100);
+                Thread.sleep(300);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            Broadcast brodcast=new ExampleBroadcast("test");
-            bus.sendBroadcast(brodcast);});
-
-        t1.start();
+            bus.sendBroadcast(toSend);
+        });
 
         t2.start();
-
+        try {
+            Message message=bus.awaitMessage(m2);
+            Assert.assertEquals(toSend,message);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
 
 

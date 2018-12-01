@@ -11,6 +11,7 @@ import bgu.spl.mics.application.passiveObjects.*;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.*;
 import java.io.*;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,7 +21,7 @@ import java.util.List;
  */
 public class BookStoreRunner {
     private static int orderId = 0;
-    private static final Object lockMain=new Object();
+    private static final Object lockMain = new Object();
 
     public static void main(String[] args) throws FileNotFoundException {
         //--------------Connection to json input file --------------------
@@ -28,7 +29,8 @@ public class BookStoreRunner {
         FileReader fileReader = new FileReader(file);
         Gson gson = new Gson();
         JsonReader reader = gson.fromJson(fileReader, JsonReader.class);
-        List<Thread> threadList=new LinkedList<>();
+
+        HashMap<Integer,Customer> customers=new HashMap<>();
 
         //------------services lists-----------------------
 
@@ -48,7 +50,7 @@ public class BookStoreRunner {
         services services = reader.getServices();
 
         //Parsed Customers+Api Services
-        ParseCustomerAndApi(services,threadList);
+        ParseCustomerAndApi(services,customers);
 
 
         //--------Parsing Service Amounts---------------
@@ -62,7 +64,6 @@ public class BookStoreRunner {
         for (int i = 1; i <= sellersAmount; i++) {
             SellingService seller = new SellingService("seller " + i, moneyRegister);
             Thread Tseller = new Thread(seller);
-            threadList.add(Tseller);
             Tseller.start();
 
         }
@@ -71,7 +72,6 @@ public class BookStoreRunner {
         for (int i = 1; i <= logisticAmount; i++) {
             LogisticsService logistic = new LogisticsService("logistic " + i);
             Thread Tlogistic = new Thread(logistic);
-            threadList.add(Tlogistic);
             Tlogistic.start();
         }
 
@@ -79,7 +79,6 @@ public class BookStoreRunner {
         for (int i = 1; i <= inventoryAmount; i++) {
             InventoryService inventoryService = new InventoryService("inventoryService " + i, library);
             Thread Tinventory = new Thread(inventoryService);
-            threadList.add(Tinventory);
             Tinventory.start();
         }
 
@@ -87,7 +86,6 @@ public class BookStoreRunner {
         for (int i = 1; i <= resourceAmount; i++) {
             ResourceService service = new ResourceService("resource " + i, resources);
             Thread Tresource = new Thread(service);
-            threadList.add(Tresource);
             Tresource.start();
         }
 
@@ -97,7 +95,7 @@ public class BookStoreRunner {
 
 
         //Creating Singleton TimeService
-        TimeService globalTimer = new TimeService("Global Timer",lockMain, parsedTime.getSpeed(), parsedTime.getDuration());
+        TimeService globalTimer = new TimeService("Global Timer", lockMain, parsedTime.getSpeed(), parsedTime.getDuration());
         Thread timeThread = new Thread(globalTimer);
         timeThread.start();
 
@@ -110,33 +108,41 @@ public class BookStoreRunner {
         }
 
         //Prints Program output into files
-        //print to file all customers in hashmap args[1]
-        //library.printInventoryToFile(args[2]);
-        //moneyRegister.printOrderReceipts(args[3]);
-        //prints Money register object args[4]
+        Serialize.serializeObject(args[1],customers);
+        library.printInventoryToFile(args[2]);
+        moneyRegister.printOrderReceipts(args[3]);
+        Serialize.serializeObject(args[4],moneyRegister);
 
 
-        System.exit(0);
-        }
+        //Deserialize
+        HashMap<Integer,Customer> outputCustomers=Deserialize.deserializeCustomers(args[1]);
+        HashMap<String,Integer> outputInv = Deserialize.deserializeInv(args[2]);
+        List<OrderReceipt>  outputOrders=Deserialize.deserializeOrders(args[3]);
+        MoneyRegister outputMoney = Deserialize.deserializeMoneyRegister(args[4]);
+
+
+        System.out.println("finished deserialize");
+    }
 
 
 
-    private static void ParseCustomerAndApi(services services, List<Thread> threadList) {
+
+
+
+        private static void ParseCustomerAndApi(services services,HashMap<Integer,Customer> customers) {
         List<customers> parsedCustomers = services.getCustomers();
-        List<Customer> customers = new LinkedList<>();
         parsedCustomers.forEach((c) -> {
             List<orderSchedule> parsedSchdules = c.getOrderSchedules();
             creditCard card = c.getCreditCard();
             Customer customer = new Customer(c.getName(), c.getId(), c.getAddress(), c.getDistance(), card.getNumber(), card.getAmount());
-            customers.add(customer);
             List<OrderReceipt> orderReceipts = new LinkedList<>();
             parsedSchdules.forEach((p) -> {
                 OrderReceipt receipt = new OrderReceipt(orderId++, c.getId(), p.getBookTitle(), p.getTick());
                 orderReceipts.add(receipt);
             });
+            customers.put(customer.getId(),customer);
             APIService apiService = new APIService("API: " + customer.getName(), orderReceipts, customer);
             Thread Tapi = new Thread(apiService);
-            threadList.add(Tapi);
             Tapi.start();
         });
     }
@@ -171,5 +177,9 @@ public class BookStoreRunner {
             inventory.load(books);
         }
     }
+
+
+
+
 }
 

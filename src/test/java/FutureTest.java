@@ -65,8 +65,6 @@ public class FutureTest {
     @Test
     public void getTimed()  {
         Integer i4=8;
-        Integer result1=future.get(1,TimeUnit.SECONDS);
-        Assert.assertNull(result1);
         Thread t2=new Thread(()->{
             try {
                 Thread.sleep(950);
@@ -76,14 +74,9 @@ public class FutureTest {
             }
             future.resolve(i4);
         });
-        Thread t1=new Thread(()->future.get(1,TimeUnit.SECONDS));
-        t1.start();
         t2.start();
-        try {
-            t1.join();
-        } catch (InterruptedException e) {
-            fail(e.getMessage());
-        }
+        Integer result= future.get(2,TimeUnit.SECONDS);
+        Assert.assertEquals(i4,result);
         Integer result2= null ;
         try {
             result2 =(Integer) currentResult.get(future);

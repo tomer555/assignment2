@@ -57,6 +57,11 @@ public class Customer implements Serializable {
      * @return A list of receipts.
      */
 	public List<OrderReceipt> getCustomerReceiptList() { return orderReceipts ; }
+
+
+	public void setCustomerReceiptList(List<OrderReceipt> receipts) {
+		this.orderReceipts=receipts;
+	}
 	
 	/**
      * Retrieves the amount of money left on this customers credit card.

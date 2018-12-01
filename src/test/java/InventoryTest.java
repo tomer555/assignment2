@@ -1,15 +1,11 @@
-
-
-import bgu.spl.mics.Future;
 import bgu.spl.mics.application.passiveObjects.BookInventoryInfo;
 import bgu.spl.mics.application.passiveObjects.Inventory;
-import bgu.spl.mics.application.passiveObjects.OrderResult;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import java.lang.reflect.Field;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 public class InventoryTest {
@@ -21,8 +17,10 @@ public class InventoryTest {
     private BookInventoryInfo book3;
     private BookInventoryInfo[ ] inventory;
     private Field booksList;
+    private List<BookInventoryInfo> toCheck;
 
     @Before
+    @SuppressWarnings("unchecked")
     public void setUp() throws ClassNotFoundException, NoSuchFieldException {
             this.listOfBooks = new Vector<>();
             this.book1=new BookInventoryInfo("name1",2,60);
@@ -32,7 +30,32 @@ public class InventoryTest {
             instance=Inventory.getInstance();
             this.booksList=Class.forName("bgu.spl.mics.application.passiveObjects.Inventory").getDeclaredField("listOfBooks");
             booksList.setAccessible(true);
+        try {
+            this.toCheck= (List<BookInventoryInfo>) booksList.get(instance);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
+
+    @After
+    public void tearDown(){
+        this.listOfBooks=null;
+        this.book1=null;
+        this.book2=null;
+        this.book3=null;
+        this.inventory=null;
+        try {
+            booksList.set(instance,new LinkedList<BookInventoryInfo>());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        this.instance=null;
+        booksList.setAccessible(false);
+
+        this.booksList=null;
+        this.toCheck=null;
+    }
+
 
 
     @Test
@@ -41,28 +64,19 @@ public class InventoryTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
+
     public void load () {
         instance.load(inventory);
-        try {
-            List<BookInventoryInfo> toCheck= (List<BookInventoryInfo>) booksList.get(instance);
-            BookInventoryInfo []books=new BookInventoryInfo[toCheck.size()];
-            for (int i=0;i<toCheck.size();i++) {
-                books[i]=toCheck.get(i);
-            }
-
-            Assert.assertArrayEquals(books,inventory);
-
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+        BookInventoryInfo []books=new BookInventoryInfo[toCheck.size()];
+        for (int i=0;i<toCheck.size();i++) {
+            books[i]=toCheck.get(i);
         }
-
+        Assert.assertArrayEquals(inventory,books);
     }
 
 
     @Test
     public void take () {
-        //we should take book1
         instance.load(inventory);
         instance.take(book1.getBookTitle());
         Assert.assertEquals(1,book1.getAmountInInventory());
@@ -70,7 +84,7 @@ public class InventoryTest {
     }
 
     @Test
-    public void checkAvailabiltyAndGetPrice() {
+    public void checkAvailabilityAndGetPrice() {
         instance.load(inventory);
         if (listOfBooks.contains(book1)) {
             Assert.assertEquals((instance.checkAvailabilityAndGetPrice(book1.getBookTitle())),60);
@@ -78,7 +92,7 @@ public class InventoryTest {
 
     }
     @Test
-    public void checkAvailabiltyAndGetPrice2() {
+    public void checkAvailabilityAndGetPrice2() {
         instance.load(inventory);
         if (listOfBooks.contains(book1)) {
             Assert.assertEquals((instance.checkAvailabilityAndGetPrice(book1.getBookTitle())),-1);
@@ -86,22 +100,5 @@ public class InventoryTest {
 
     }
 
-    @Test
-    public void printInventoryToFile() {
-        instance.load(inventory);
-    instance.printInventoryToFile("src/test/java/output.txt");
-    }
+
 }
-/*
-  Collections.addAll(this.listOfBooks,inventory);
-        for (BookInventoryInfo book:listOfBooks) {
-            for (int i=0;i<inventory.length;i++) {
-                if (!book.getBookTitle().equals(inventory[i].getBookTitle()))
-                    System.out.print("not good");
-            }
-        }
-        for (int i=0;i<inventory.length;i++) {
-            if (!listOfBooks.contains(inventory[i]))
-                System.out.print("not good");
-        }
-        */

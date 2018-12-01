@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import bgu.spl.mics.application.Serialize;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -113,15 +115,7 @@ public class Inventory {
 		for (BookInventoryInfo book:listOfBooks) {
 			serializedMap.put(book.getBookTitle(),book.getAmountInInventory());
 		}
-		try{
-			FileOutputStream fileOut=new FileOutputStream(filename);
-			ObjectOutputStream out =new ObjectOutputStream(fileOut);
-			out.writeObject(serializedMap);
-			out.close();
-			fileOut.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		Serialize.serializeObject(filename,serializedMap);
 	}
-	}
+}
 

@@ -97,10 +97,12 @@ public class Future<T> {
         long sleepMillis=unit.toMillis(timeout);
 		if(resolved)
 			return result;
-		try {
-			resultLock.wait(sleepMillis);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		synchronized (resultLock) {
+			try {
+				resultLock.wait(sleepMillis);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 
 		if(resolved)

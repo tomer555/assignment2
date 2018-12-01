@@ -47,6 +47,7 @@ public class APIService extends MicroService implements Serializable {
 		if(!orderSchedule.isEmpty()){
 			TickToSend=orderSchedule.get(0).getOrderTick();
 		}
+		customer.setCustomerReceiptList(orderSchedule);
 	}
 
 	private void lastCall(){
