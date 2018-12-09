@@ -155,10 +155,17 @@ public class MessageBusImpl implements MessageBus {
 	 */
 	@Override
 	public void unregister(MicroService m) {
-		queueMap.remove(m);
+
 		messageSubscribersMap.forEach((message, queue) -> {
-			queue.removeIf((micro) -> micro.equals(m));
+			synchronized (queue) {
+				queue.removeIf((micro) -> micro.equals(m));
+			}
 		});
+		synchronized (queueMap.get(m)) {
+			queueMap.remove(m);
+		}
+
+
 	}
 
 	/**

@@ -46,15 +46,14 @@ public class ResourcesHolder {
      * 			{@link DeliveryVehicle} when completed.   
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
-		DeliveryVehicle vehicle = null;
-		try {
-			vehicle = carsQueue.take();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+
+		DeliveryVehicle vehicle = carsQueue.poll();
+		if(vehicle!=null) {
+			Future<DeliveryVehicle> future = new Future<>();
+			future.resolve(vehicle);
+			return future;
 		}
-		Future<DeliveryVehicle> future = new Future<>();
-		future.resolve(vehicle);
-		return future;
+		return new Future<>();
 	}
 	/**
      * Releases a specified vehicle, opening it again for the possibility of
