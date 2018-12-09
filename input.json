@@ -7,7 +7,7 @@
   ],
   "initialResources":[
    {"vehicles":[
-     {"license":123483, "speed": 1}
+     {"license":123483, "speed": 4}
 
 
 
@@ -21,8 +21,8 @@
     },
     "selling": 1,
     "inventoryService": 2,
-    "logistics": 2,
-    "resourcesService": 2,
+    "logistics": 1,
+    "resourcesService": 1,
     "customers": [
      {
         "id": 123456789,
@@ -37,7 +37,7 @@
             {"bookTitle": "Tomers book", "tick": 5},
             {"bookTitle": "Tomers book", "tick": 5},
             {"bookTitle": "The Hunger Games", "tick": 6},
-            {"bookTitle": "Harry Poter", "tick": 12},
+            {"bookTitle": "Harry Poter", "tick": 10},
             {"bookTitle": "special book", "tick": 7},
             {"bookTitle": "Tomers book", "tick": 8},
             {"bookTitle": "Tomers book", "tick": 6}

@@ -5,12 +5,14 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireCarEvent;
 import bgu.spl.mics.application.messages.ReturnCarEvent;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
-import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
-import bgu.spl.mics.application.passiveObjects.Inventory;
-import bgu.spl.mics.application.passiveObjects.MoneyRegister;
-import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
+import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.passiveObjects.*;
 
 import java.io.Serializable;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * ResourceService is in charge of the store resources - the delivery vehicles.
@@ -23,15 +25,34 @@ import java.io.Serializable;
  */
 public class ResourceService extends MicroService implements Serializable {
 	private ResourcesHolder resourcesHolder;
+	private AtomicInteger currentTick;
+	private ConcurrentHashMap<AcquireCarEvent,Future<DeliveryVehicle>> futures;
 	public ResourceService(String name,ResourcesHolder resourcesHolder) {
 		super(name);
 		this.resourcesHolder=resourcesHolder;
-
+		this.currentTick=new AtomicInteger(0);
+		this.futures=new ConcurrentHashMap<>();
 	}
 
 	@Override
 	protected void initialize() {
 
+
+
+		//Subscribe to TickBroadcast
+		subscribeBroadcast(TickBroadcast.class, message->
+		{
+			currentTick.set(message.getCurrentTick());
+			System.out.println(getName() +" got the time :"+currentTick);
+
+			futures.forEach((key,value)->{
+				if(value.isDone()) {
+					futures.remove(key);
+					complete(key,value.get());
+				}
+			});
+
+		});
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
 
@@ -39,10 +60,14 @@ public class ResourceService extends MicroService implements Serializable {
 		subscribeEvent(AcquireCarEvent.class,ev->{
 			System.out.println(getName() + "got a demand for a Vehicle");
 			Future <DeliveryVehicle> deliveryVehicleFuture=resourcesHolder.acquireVehicle();
-			DeliveryVehicle deliveryVehicle= deliveryVehicleFuture.get();
-			System.out.println(getName()+ " Found a Car!!");
+			if(deliveryVehicleFuture.isDone()){
+				System.out.println(getName()+ " Found a Car!!");
+				complete(ev,deliveryVehicleFuture.get());
+			}
+			else
+				futures.put(ev,deliveryVehicleFuture);
 			//that one will change my first future from the logistic. we have created 2 futures. resourceholder(GC AUTO) and messagebus(complete)
-			complete(ev,deliveryVehicle);
+
 		});
 
 		subscribeEvent(ReturnCarEvent.class,ev->{
