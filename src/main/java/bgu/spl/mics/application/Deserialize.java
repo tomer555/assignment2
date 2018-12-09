@@ -4,6 +4,7 @@ import bgu.spl.mics.application.passiveObjects.Customer;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -74,7 +75,8 @@ public class Deserialize {
         try {
             // Reading the object from a file
             FileInputStream file = new FileInputStream(path);
-            ObjectInputStream in = new ObjectInputStream(file);
+            BufferedInputStream bf=new BufferedInputStream(file);
+            ObjectInputStream in = new ObjectInputStream(bf);
             // Method for deserialization of object
             output =(MoneyRegister)  in.readObject();
             in.close();

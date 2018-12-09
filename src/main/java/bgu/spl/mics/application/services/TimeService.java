@@ -55,7 +55,7 @@ public class TimeService extends MicroService{
 		};
 
 
-		timer.scheduleAtFixedRate(timerTask,0,speed);
+		timer.schedule(timerTask,0,speed);
 	}
 
 	public int getDuration() {

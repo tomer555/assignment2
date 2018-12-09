@@ -94,5 +94,12 @@ public class OrderReceipt implements Serializable {
 		this.orderTick=orderId;
 	}
 
+	public String toString(){
+		String output;
+		output="Order ID: "+orderId+"\n"+"Customer ID: "+customerId+"\n"+"Seller"+seller+"\n"+"Book Name: "+bookTitle+"\n";
+		output=output+"Book Price "+price+"\n"+"orderTick: "+orderTick+"\n"+"processTick: "+processTick+"\n"+"issuedTick: "+issuedTick+"\n";
+		return output;
+	}
+
 
 }

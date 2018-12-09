@@ -5,6 +5,7 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.passiveObjects.*;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Selling service in charge of taking orders from customers.
@@ -18,11 +19,11 @@ import java.io.Serializable;
  */
 public class SellingService extends MicroService implements Serializable {
 	private MoneyRegister moneyRegister;
-	private int currentTick;
+	private AtomicInteger currentTick;
 	public SellingService(String name,MoneyRegister moneyRegister) {
 		super(name);
 		this.moneyRegister=moneyRegister;
-		this.currentTick=0;
+		this.currentTick=new AtomicInteger(0);
 	}
 
 	@Override
@@ -32,7 +33,7 @@ public class SellingService extends MicroService implements Serializable {
 		//Subscribe to TickBroadcast
 		subscribeBroadcast(TickBroadcast.class,message->
 		{
-			currentTick=message.getCurrentTick();
+			currentTick.set(message.getCurrentTick());
 			System.out.println(getName() +" got the time :"+currentTick);
 		});
 
@@ -44,7 +45,7 @@ public class SellingService extends MicroService implements Serializable {
 		//Subscribe to BookOrderEvent
 		subscribeEvent(BookOrderEvent.class, ev -> {
 			OrderReceipt receipt=ev.getOrder();
-			receipt.setProcessTick(currentTick);
+			receipt.setProcessTick(currentTick.get());
 			receipt.setSeller(getName());
 			String bookTitle=ev.getOrder().getBookTitle();
 			Customer customer=ev.getCustomer();
@@ -58,7 +59,7 @@ public class SellingService extends MicroService implements Serializable {
 				OrderResult acquireBook=acquireBookFuture.get();
 				if(acquireBook==OrderResult.SUCCESSFULLY_TAKEN){
 					moneyRegister.chargeCreditCard(customer,bookPrice);
-					receipt.setIssuedTick(currentTick);
+					receipt.setIssuedTick(currentTick.get());
 					moneyRegister.file(receipt);
 					complete(ev,receipt);
 				}

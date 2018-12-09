@@ -1,7 +1,4 @@
 package bgu.spl.mics.application;
-import bgu.spl.mics.MessageBus;
-import bgu.spl.mics.MessageBusImpl;
-import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.parsing.FirstPart.initialInventory;
 import bgu.spl.mics.application.parsing.JsonReader;
 import bgu.spl.mics.application.parsing.SecondPart.initialResources;
@@ -114,14 +111,7 @@ public class BookStoreRunner {
         Serialize.serializeObject(args[4],moneyRegister);
 
 
-        //Deserialize
-        HashMap<Integer,Customer> outputCustomers=Deserialize.deserializeCustomers(args[1]);
-        HashMap<String,Integer> outputInv = Deserialize.deserializeInv(args[2]);
-        List<OrderReceipt>  outputOrders=Deserialize.deserializeOrders(args[3]);
-        MoneyRegister outputMoney = Deserialize.deserializeMoneyRegister(args[4]);
-
-
-        System.out.println("finished deserialize");
+        System.exit(0);
     }
 
 

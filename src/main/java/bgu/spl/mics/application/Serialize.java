@@ -1,11 +1,8 @@
 package bgu.spl.mics.application;
-
-import bgu.spl.mics.application.passiveObjects.Customer;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.HashMap;
+
 
 public class Serialize {
 

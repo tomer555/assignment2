@@ -83,5 +83,11 @@ public class Customer implements Serializable {
      * Retrieves this customers credit card serial number.    
      */
 	public int getCreditNumber() { return creditNumber; }
+
+	public String toString(){
+		String output;
+		output="ID: "+id+"\n"+"Name: "+name+"\n"+"Address: "+address+"\n"+"Distance: "+distance+"\n"+"Available Credit: "+availableCreditAmount.get()+"\n";
+		return output;
+	}
 	
 }
