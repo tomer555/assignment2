@@ -3,12 +3,14 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireBookEvent;
 import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -25,14 +27,18 @@ public class InventoryService extends MicroService implements Serializable {
 	private Inventory inventory;
 
 
+
 	public InventoryService(String name, Inventory inventory) {
 		super(name);
 		this.inventory = inventory;
+
 
 	}
 
 	@Override
 	protected void initialize() {
+
+//Subscribe to TickBroadcast
 
 
 		//Subscribe To Termination

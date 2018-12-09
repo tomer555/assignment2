@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 import java.util.Timer;
@@ -55,7 +56,7 @@ public class TimeService extends MicroService{
 		};
 
 
-		timer.schedule(timerTask,0,speed);
+		timer.scheduleAtFixedRate(timerTask,0,speed);
 	}
 
 	public int getDuration() {

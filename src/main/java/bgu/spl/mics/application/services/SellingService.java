@@ -5,6 +5,8 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.passiveObjects.*;
 
 import java.io.Serializable;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -20,10 +22,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SellingService extends MicroService implements Serializable {
 	private MoneyRegister moneyRegister;
 	private AtomicInteger currentTick;
+
 	public SellingService(String name,MoneyRegister moneyRegister) {
 		super(name);
 		this.moneyRegister=moneyRegister;
 		this.currentTick=new AtomicInteger(0);
+
 	}
 
 	@Override
@@ -58,8 +62,8 @@ public class SellingService extends MicroService implements Serializable {
 				Future<OrderResult> acquireBookFuture=sendEvent(new AcquireBookEvent(bookTitle));
 				OrderResult acquireBook=acquireBookFuture.get();
 				if(acquireBook==OrderResult.SUCCESSFULLY_TAKEN){
-					moneyRegister.chargeCreditCard(customer,bookPrice);
 					receipt.setIssuedTick(currentTick.get());
+					moneyRegister.chargeCreditCard(customer,bookPrice);
 					moneyRegister.file(receipt);
 					complete(ev,receipt);
 				}
