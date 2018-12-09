@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Write your implementation here!
  * Only private fields and methods can be added to this class.
  */
+
 public class MessageBusImpl implements MessageBus {
 
 	private static volatile MessageBus instance = null;
@@ -46,24 +47,21 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 
-
+	@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 	private void subscribeMessage(Class<? extends Message> type,MicroService m) {
-		synchronized (type) {
-			if (messageSubscribersMap.containsKey(type)) {
-				try {
-					messageSubscribersMap.get(type).put(m);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			} else {
-				BlockingQueue<MicroService> toInsert = new LinkedBlockingQueue<>();
-				try {
-					toInsert.put(m);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				messageSubscribersMap.put(type, toInsert);
 
+		synchronized (type) {
+			try {
+				if (messageSubscribersMap.containsKey(type))
+					messageSubscribersMap.get(type).put(m);
+				else {
+					BlockingQueue<MicroService> toInsert = new LinkedBlockingQueue<>();
+					toInsert.put(m);
+					messageSubscribersMap.put(type, toInsert);
+				}
+			}
+			catch (InterruptedException e){
+				e.printStackTrace();
 			}
 		}
 	}
@@ -124,17 +122,20 @@ public class MessageBusImpl implements MessageBus {
 	 * @return future from type T that will be resolved at some point
 	 */
 	@Override
+	@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 	public <T> Future<T> sendEvent(Event<T> e) {
 		if (!messageSubscribersMap.containsKey(e.getClass()))
 			return null;
 		BlockingQueue<MicroService> microServices = messageSubscribersMap.get(e.getClass());
 		Future<T> future = new Future<>();
-		try {
-            MicroService round = microServices.take();
-			microServices.put(round);
-			queueMap.get(round).put(e);
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
+		synchronized (microServices) {
+			try {
+				MicroService round = microServices.take();
+				microServices.put(round);
+				queueMap.get(round).put(e);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 		}
 		futuresMap.put(e, future);
 		return future;

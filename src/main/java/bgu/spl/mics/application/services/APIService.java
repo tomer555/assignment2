@@ -7,6 +7,7 @@ import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.*;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Vector;
 
@@ -38,25 +39,14 @@ public class APIService extends MicroService implements Serializable {
 		this.TickToSend=0;
 		this.index=0;
 		//sorting list from smallest tick to last
-		orderSchedule.sort((order1,order2)->{
-			if (order1.getOrderTick()<order2.getOrderTick())
-				return 1;
-			else
-				return 0;
-		});
+		orderSchedule.sort(Comparator.comparingInt(OrderReceipt::getOrderTick));
+
 		if(!orderSchedule.isEmpty()){
 			TickToSend=orderSchedule.get(0).getOrderTick();
 		}
 		customer.setCustomerReceiptList(orderSchedule);
 	}
 
-	private void lastCall(){
-
-
-
-
-
-	}
 
 	@Override
 	protected void initialize() {
