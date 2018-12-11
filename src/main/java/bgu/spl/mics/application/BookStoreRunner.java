@@ -25,17 +25,14 @@ public class BookStoreRunner {
         FileReader fileReader = new FileReader(file);
         Gson gson = new Gson();
         JsonReader reader = gson.fromJson(fileReader, JsonReader.class);
-
         HashMap<Integer,Customer> customers=new HashMap<>();
-
-
-        //------------services lists-----------------------
 
 
         //Creating Singleton Classes
         Inventory library = Inventory.getInstance();
         ResourcesHolder resources = ResourcesHolder.getInstance();
         MoneyRegister moneyRegister = MoneyRegister.getInstance();
+
 
         //Parsing Books
         addBooksToInventory(reader, library);
@@ -45,7 +42,6 @@ public class BookStoreRunner {
 
         //Parsing Services
         services services = reader.getServices();
-
 
         //--------Parsing Service Amounts---------------
         int sellersAmount = services.getSelling();
@@ -60,8 +56,10 @@ public class BookStoreRunner {
         // countDownLatch for timer to start when all services finished subscribing
         CountDownLatch startSignal = new CountDownLatch(ServicesCount);
 
-        // countDownLatch for Main to know that all services got Terminated
+        // countDownLatch for Main to know that all services got Terminated including Time Service
         CountDownLatch endSignal = new CountDownLatch(ServicesCount+1);
+
+        //-------------------services lists-----------------------
 
         //Parsed Customers+Api Services
         ParseCustomerAndApi(services,customers,startSignal,endSignal);
@@ -95,7 +93,6 @@ public class BookStoreRunner {
             Tresource.start();
         }
 
-
         //-----Parsing Time-------
         time parsedTime = services.getTime();
 
@@ -106,6 +103,7 @@ public class BookStoreRunner {
         timeThread.start();
 
 
+        //waiting for all services to Terminate
         try {
             endSignal.await();
         } catch (InterruptedException e) {
