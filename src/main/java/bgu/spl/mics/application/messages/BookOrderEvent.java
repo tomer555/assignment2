@@ -2,8 +2,10 @@ package bgu.spl.mics.application.messages;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.application.passiveObjects.Customer;
 import bgu.spl.mics.application.passiveObjects.OrderReceipt;
-
-
+/**
+ * an event that api service send to selling service in order to order a book
+ * this message contains Customer info and not done order receipt
+ */
 public class BookOrderEvent implements Event<OrderReceipt> {
     private OrderReceipt order;
     private Customer customer;

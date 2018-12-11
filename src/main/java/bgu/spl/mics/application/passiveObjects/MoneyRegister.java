@@ -1,9 +1,5 @@
 package bgu.spl.mics.application.passiveObjects;
 import bgu.spl.mics.application.Serialize;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class MoneyRegister implements Serializable {
 	private static volatile MoneyRegister instance = null;
-	private static final Object lockRegister = new Object();
+	private static transient final Object lockRegister = new Object();
 	private List<OrderReceipt> orderReceiptList;
 	private AtomicInteger earnings;
 	private MoneyRegister(){
@@ -63,8 +59,6 @@ public class MoneyRegister implements Serializable {
      * @param amount 	amount to charge
      */
 	public void chargeCreditCard(Customer c, int amount) {
-		//should we add a check if the customer has enough money???
-		//maybe we should do Atomic compare and set
 		c.setAvailableCreditAmount(amount);
 		earnings.set(earnings.intValue()+amount);
 	}

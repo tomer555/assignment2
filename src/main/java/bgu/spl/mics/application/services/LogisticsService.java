@@ -41,7 +41,7 @@ public class LogisticsService extends MicroService implements Serializable {
 			System.out.println(getName()+" asking Recourse Service to acquire a car");
 
 
-			Future<Future<DeliveryVehicle>> deliveryEventFuture=sendEvent(new AcquireCarEvent());
+			Future<Future<DeliveryVehicle>> deliveryEventFuture=sendEvent(new AcquireCarEvent(ev.getCustomer()));
 			DeliveryVehicle car =deliveryEventFuture.get().get();
 			System.out.println(getName() + " got the car to deliver: "+car.getLicense());
 			Customer customer=ev.getCustomer();

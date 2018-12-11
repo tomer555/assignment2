@@ -42,7 +42,7 @@ public class SellingService extends MicroService implements Serializable {
 		subscribeBroadcast(TickBroadcast.class,message->
 		{
 			currentTick.set(message.getCurrentTick());
-			System.out.println(getName() +" got the time :"+currentTick);
+			System.out.println(getName() +" time :"+currentTick);
 		});
 
 

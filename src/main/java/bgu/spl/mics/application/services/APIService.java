@@ -64,7 +64,7 @@ public class APIService extends MicroService implements Serializable {
 		//Subscribe to TickBroadcast
 		subscribeBroadcast(TickBroadcast.class, message->{
 			currentTick=message.getCurrentTick();
-			System.out.println(getName() +" got the time: "+currentTick);
+			System.out.println(getName() +" time: "+currentTick);
 
 			while (index<orderSchedule.size() && currentTick==TickToSend){
 				OrderReceipt orderReceipt=orderSchedule.get(index);

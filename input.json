@@ -18,21 +18,24 @@
       "speed": 1000,
       "duration": 10
     },
-    "selling": 2,
-    "inventoryService": 2,
-    "logistics": 2,
-    "resourcesService": 2,
+    "selling": 3,
+    "inventoryService": 3,
+    "logistics": 3,
+    "resourcesService": 3,
     "customers": [
      {
         "id": 123456789,
         "name": "Bruria",
         "address": "NewYork 123",
         "distance":20,
-        "creditCard":{"number":67890,"amount":192},
+        "creditCard":{"number":67890,"amount":500},
         "orderSchedule": [
-
+            {"bookTitle": "special book", "tick": 5},
             {"bookTitle": "The Hunger Games", "tick": 6},
-            {"bookTitle": "Harry Poter", "tick": 6}
+            {"bookTitle": "Harry Poter", "tick": 6},
+            {"bookTitle": "special book", "tick": 7},
+            {"bookTitle": "special book", "tick": 7},
+            {"bookTitle": "special book", "tick": 9}
 
           ]
       },
@@ -41,10 +44,14 @@
         "name": "Shraga",
         "address": "BeerSheva 3333",
         "distance":12,
-         "creditCard":{"number":453536,"amount":160},
+         "creditCard":{"number":453536,"amount":900},
     "orderSchedule": [
         {"bookTitle": "The Hunger Games", "tick": 2},
-        {"bookTitle": "Tomers book", "tick": 2}
+        {"bookTitle": "Tomers book", "tick": 2},
+        {"bookTitle": "special book", "tick": 3},
+        {"bookTitle": "special book", "tick": 3},
+        {"bookTitle": "special book", "tick": 3},
+        {"bookTitle": "special book", "tick": 3}
 
     ]
     }

@@ -39,12 +39,6 @@ public class TimeService extends MicroService{
 
 	@Override
 	protected void initialize() {
-		try {
-			startSignal.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
 
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message->{
@@ -55,7 +49,7 @@ public class TimeService extends MicroService{
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
-                System.out.println("Global time :"+ticks);
+                System.out.println("Global time: "+ticks);
 				if(ticks<duration)
 					sendBroadcast(new TickBroadcast(ticks));
 				else {
@@ -66,6 +60,14 @@ public class TimeService extends MicroService{
 				ticks++;
 			}
 		};
+
+		//waiting until all services will initialize before starting timer
+		try {
+			startSignal.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 		timer.scheduleAtFixedRate(timerTask,0,speed);
 	}
 	public int getDuration() {
