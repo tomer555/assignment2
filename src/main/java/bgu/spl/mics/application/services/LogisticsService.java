@@ -43,7 +43,7 @@ public class LogisticsService extends MicroService implements Serializable {
 			car.deliver(customer.getAddress(), customer.getDistance());
 			System.out.println(getName() +" confirmed that car: "+car.getLicense()+" delivered the book to: "+ev.getCustomer().getAddress());
 			System.out.println(getName()+" returning car to Resource Service");
-			sendEvent(new ReturnCarEvent(car));
+			sendEvent(new ReturnCarEvent(ev.getCustomer(),car));
 
 		});
 	}
