@@ -1,5 +1,4 @@
 package bgu.spl.mics.application.passiveObjects;
-
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,6 +18,7 @@ public class Customer implements Serializable {
 	private int creditNumber;
 	private List<OrderReceipt> orderReceipts;
 	private AtomicInteger availableCreditAmount;
+	private final transient Object moneyLock=new Object();
 
 
 	public Customer(String name,int id, String address,int distance, int creditNumber, int availableCreditAmount){
@@ -89,5 +89,8 @@ public class Customer implements Serializable {
 		output="ID: "+id+"\n"+"Name: "+name+"\n"+"Address: "+address+"\n"+"Distance: "+distance+"\n"+"Available Credit: "+availableCreditAmount.get()+"\n";
 		return output;
 	}
-	
+
+	public Object getMoneyLock() {
+		return moneyLock;
+	}
 }

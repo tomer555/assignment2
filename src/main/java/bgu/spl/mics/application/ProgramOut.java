@@ -16,13 +16,7 @@ public class ProgramOut {
         HashMap<String,Integer> outputInv = Deserialize.deserializeInv(args[2]);
         HashMap<Integer,Customer> outputCustomers=Deserialize.deserializeCustomers(args[1]);
 
-
-
-
-
-
         //Printing
-
         System.out.println("Customers:");
         for (Map.Entry<Integer, Customer> entry : outputCustomers.entrySet()) {
             Integer key = entry.getKey();

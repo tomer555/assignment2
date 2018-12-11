@@ -7,7 +7,7 @@ import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 import java.util.Timer;
 import java.util.TimerTask;
-
+import java.util.concurrent.CountDownLatch;
 
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
@@ -24,18 +24,34 @@ public class TimeService extends MicroService{
 	private int duration;
 	private Timer timer;
 	private int ticks;
-	private final Object lockMain;
-	public TimeService(String name,Object lockMain , int speed,int duration) {
+	private final CountDownLatch startSignal;
+	private final CountDownLatch endSignal;
+
+	public TimeService(String name, int speed,int duration,CountDownLatch startSignal,CountDownLatch endSignal) {
 		super(name);
-		this.lockMain=lockMain;
 		this.speed=speed;
 		this.duration=duration;
 		this.timer=new Timer();
 		this.ticks=1;
+		this.startSignal=startSignal;
+		this.endSignal=endSignal;
 	}
 
 	@Override
 	protected void initialize() {
+		try {
+			startSignal.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+
+		//Subscribe To Termination
+		subscribeBroadcast(TerminationBroadcast.class, message->{
+			this.terminate();
+			endSignal.countDown();
+		});
+
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
@@ -45,24 +61,16 @@ public class TimeService extends MicroService{
 				else {
 					sendBroadcast(new TickBroadcast(ticks));
 					sendBroadcast(new TerminationBroadcast());
-					synchronized (lockMain) {
-						terminate();
-						timer.cancel();
-						lockMain.notify();
-					}
+					timer.cancel();
 				}
 				ticks++;
 			}
 		};
-
-
 		timer.scheduleAtFixedRate(timerTask,0,speed);
 	}
-
 	public int getDuration() {
 		return duration;
 	}
-
 
 	public int getSpeed() {
 		return speed;

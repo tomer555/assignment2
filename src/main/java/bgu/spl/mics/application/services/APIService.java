@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
 
 
 /**
@@ -28,9 +29,11 @@ public class APIService extends MicroService implements Serializable {
 	private int currentTick;
 	private int TickToSend;
 	private int index;
+    private final CountDownLatch startSignal;
+    private final CountDownLatch endSignal;
 
 
-	public APIService(String name, List<OrderReceipt> orderSchedule, Customer customer) {
+	public APIService(String name, List<OrderReceipt> orderSchedule, Customer customer,CountDownLatch startSignal,CountDownLatch endSignal) {
 		super(name);
 		this.orderSchedule=orderSchedule;
 		this.orderReceiptFutures=new Vector<>();
@@ -38,7 +41,9 @@ public class APIService extends MicroService implements Serializable {
 		this.currentTick=0;
 		this.TickToSend=0;
 		this.index=0;
-		//sorting list from smallest tick to last
+        this.startSignal=startSignal;
+        this.endSignal=endSignal;
+		//sorting list from smallest Order tick to largest
 		orderSchedule.sort(Comparator.comparingInt(OrderReceipt::getOrderTick));
 
 		if(!orderSchedule.isEmpty()){
@@ -50,10 +55,15 @@ public class APIService extends MicroService implements Serializable {
 
 	@Override
 	protected void initialize() {
+		//Subscribe To Termination
+		subscribeBroadcast(TerminationBroadcast.class, message-> {
+            this.terminate();
+            endSignal.countDown();
+        });
+
 		//Subscribe to TickBroadcast
 		subscribeBroadcast(TickBroadcast.class, message->{
 			currentTick=message.getCurrentTick();
-
 			System.out.println(getName() +" got the time: "+currentTick);
 
 			while (index<orderSchedule.size() && currentTick==TickToSend){
@@ -64,15 +74,12 @@ public class APIService extends MicroService implements Serializable {
 					TickToSend=orderSchedule.get(index).getOrderTick();
 			}
 
-
-
-				for(int i=0;i<orderReceiptFutures.size();i++){
-                    Future<OrderReceipt> future =orderReceiptFutures.get(i);
-				    if(future.isDone()) {
-                        OrderReceipt receipt = future.get();
-                        if(receipt!=null) {
-                            System.out.println(getName()+" successfully got back the receipt of book: "+receipt.getBookTitle()+", Order tick: "+
-                            receipt.getOrderTick()+", process Tick : "+receipt.getProcessTick()+", issued Tick: "+receipt.getIssuedTick());
+			for(int i=0;i<orderReceiptFutures.size();i++){
+				Future<OrderReceipt> future =orderReceiptFutures.get(i);
+				if(future.isDone()) {
+					OrderReceipt receipt = future.get();
+					if(receipt!=null) {
+						System.out.println(getName()+" successfully got back the receipt of book: "+receipt.getBookTitle()+", Order tick: "+ receipt.getOrderTick()+", process Tick : "+receipt.getProcessTick()+", issued Tick: "+receipt.getIssuedTick());
                             sendEvent(new DeliveryEvent(customer));
                         }
                         orderReceiptFutures.remove(i);
@@ -80,10 +87,7 @@ public class APIService extends MicroService implements Serializable {
                     }
                 }
 		});
-
-		//Subscribe To Termination
-		subscribeBroadcast(TerminationBroadcast.class, message->  this.terminate());
-
+        startSignal.countDown();
 	}
 }
 

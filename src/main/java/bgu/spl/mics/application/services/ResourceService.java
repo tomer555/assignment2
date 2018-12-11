@@ -12,6 +12,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -25,58 +26,40 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ResourceService extends MicroService implements Serializable {
 	private ResourcesHolder resourcesHolder;
-	private AtomicInteger currentTick;
-	private ConcurrentHashMap<AcquireCarEvent,Future<DeliveryVehicle>> futures;
-	public ResourceService(String name,ResourcesHolder resourcesHolder) {
+	private final CountDownLatch startSignal;
+	private final CountDownLatch endSignal;
+
+	public ResourceService(String name,ResourcesHolder resourcesHolder,CountDownLatch startSignal,CountDownLatch endSignal) {
 		super(name);
 		this.resourcesHolder=resourcesHolder;
-		this.currentTick=new AtomicInteger(0);
-		this.futures=new ConcurrentHashMap<>();
+		this.startSignal=startSignal;
+		this.endSignal=endSignal;
 	}
 
 	@Override
 	protected void initialize() {
 
 
-
-		//Subscribe to TickBroadcast
-		subscribeBroadcast(TickBroadcast.class, message->
-		{
-			currentTick.set(message.getCurrentTick());
-			System.out.println(getName() +" got the time :"+currentTick);
-
-			futures.forEach((key,value)->{
-				value=resourcesHolder.acquireVehicle();
-				if(value.isDone()) {
-					futures.remove(key);
-					complete(key,value.get());
-				}
-			});
-		});
-
-
 		//Subscribe To Termination
-		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
+		subscribeBroadcast(TerminationBroadcast.class, message->{
+			this.terminate();
+			endSignal.countDown();
+		});
 
 
 		subscribeEvent(AcquireCarEvent.class,ev->{
-			System.out.println(getName() + "got a demand for a Vehicle");
+			System.out.println(getName() + " got a demand for a Vehicle");
 			Future <DeliveryVehicle> deliveryVehicleFuture=resourcesHolder.acquireVehicle();
-			if(deliveryVehicleFuture.isDone()){
-				System.out.println(getName()+ " Found a Car!!");
-				complete(ev,deliveryVehicleFuture.get());
-			}
-			else
-				futures.put(ev,deliveryVehicleFuture);
+				System.out.println(getName()+ " Returned a Future for Vehicle");
+				complete(ev,deliveryVehicleFuture);
+			});
 
 
-		});
 
 		subscribeEvent(ReturnCarEvent.class,ev->{
-			
 			resourcesHolder.releaseVehicle(ev.getCarToReturn());
-			System.out.println(getName() +" got back car: "+ev.getCarToReturn().getLicense()+" got returned");
+			System.out.println(getName() +" got back car: "+ev.getCarToReturn().getLicense()+" and returned it");
 		});
-
+		startSignal.countDown();
 	}
 }

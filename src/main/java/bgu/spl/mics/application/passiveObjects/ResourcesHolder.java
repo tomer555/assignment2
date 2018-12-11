@@ -1,8 +1,8 @@
 package bgu.spl.mics.application.passiveObjects;
 import bgu.spl.mics.Future;
 import java.util.Collections;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Passive object representing the resource manager.
@@ -16,10 +16,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ResourcesHolder {
 	private static volatile ResourcesHolder instance = null;
 	private static final Object lockResource = new Object();
-	private BlockingQueue<DeliveryVehicle> carsQueue;
+	private Queue<DeliveryVehicle> carsQueue;
+	private Queue<Future<DeliveryVehicle>> futuresToResolve;
 
 	private ResourcesHolder(){
-		this.carsQueue=new LinkedBlockingQueue<>();
+		this.carsQueue=new LinkedList<>();
+		this.futuresToResolve=new LinkedList<>();
 	}
 	/**
      * Retrieves the single instance of this class.
@@ -45,15 +47,15 @@ public class ResourcesHolder {
      * @return 	{@link Future<DeliveryVehicle>} object which will resolve to a 
      * 			{@link DeliveryVehicle} when completed.   
      */
-	public Future<DeliveryVehicle> acquireVehicle() {
-
+	public synchronized Future<DeliveryVehicle> acquireVehicle() {
 		DeliveryVehicle vehicle = carsQueue.poll();
+		Future<DeliveryVehicle> future = new Future<>();
 		if(vehicle!=null) {
-			Future<DeliveryVehicle> future = new Future<>();
 			future.resolve(vehicle);
 			return future;
 		}
-		return new Future<>();
+		futuresToResolve.add(future);
+		return future;
 	}
 	/**
      * Releases a specified vehicle, opening it again for the possibility of
@@ -61,9 +63,11 @@ public class ResourcesHolder {
      * <p>
      * @param vehicle	{@link DeliveryVehicle} to be released.
      */
-	public void releaseVehicle(DeliveryVehicle vehicle) {
-
-		carsQueue.add(vehicle);
+	public synchronized void releaseVehicle(DeliveryVehicle vehicle) {
+		if(!futuresToResolve.isEmpty())
+			futuresToResolve.poll().resolve(vehicle);
+		else
+			carsQueue.add(vehicle);
 	}
 	
 	/**

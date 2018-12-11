@@ -64,9 +64,6 @@ public class MoneyRegister implements Serializable {
      */
 	public void chargeCreditCard(Customer c, int amount) {
 		//should we add a check if the customer has enough money???
-		if(c.getAvailableCreditAmount()<amount) {
-			//throw some exception
-		}
 		//maybe we should do Atomic compare and set
 		c.setAvailableCreditAmount(amount);
 		earnings.set(earnings.intValue()+amount);

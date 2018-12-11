@@ -6,6 +6,7 @@ import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.*;
 
 import java.io.Serializable;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Logistic service in charge of delivering books that have been purchased to customers.
@@ -17,26 +18,31 @@ import java.io.Serializable;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class LogisticsService extends MicroService implements Serializable {
-
-	public LogisticsService(String name) {
+	private final CountDownLatch startSignal;
+	private final CountDownLatch endSignal;
+	public LogisticsService(String name,CountDownLatch startSignal,CountDownLatch endSignal) {
 		super(name);
-
+		this.startSignal=startSignal;
+		this.endSignal=endSignal;
 	}
 
 	@Override
 	protected void initialize() {
 
 		//Subscribe To Termination
-		subscribeBroadcast(TerminationBroadcast.class, message->this.terminate());
+		subscribeBroadcast(TerminationBroadcast.class, message->{
+			this.terminate();
+			endSignal.countDown();
+		});
 
 
 		subscribeEvent(DeliveryEvent.class,ev->{
 			System.out.println(getName()+" got new Delivery to customer: "+ev.getCustomer().getName());
-			//getting a reference to the messageBus's future
-			System.out.println(getName()+"asking Recourse Service to acquire a car");
-			Future<DeliveryVehicle> deliveryEventFuture=sendEvent(new AcquireCarEvent());
-			//waiting for that future to resolve
-			DeliveryVehicle car= deliveryEventFuture.get();
+			System.out.println(getName()+" asking Recourse Service to acquire a car");
+
+
+			Future<Future<DeliveryVehicle>> deliveryEventFuture=sendEvent(new AcquireCarEvent());
+			DeliveryVehicle car =deliveryEventFuture.get().get();
 			System.out.println(getName() + " got the car to deliver: "+car.getLicense());
 			Customer customer=ev.getCustomer();
 
@@ -46,5 +52,7 @@ public class LogisticsService extends MicroService implements Serializable {
 			sendEvent(new ReturnCarEvent(ev.getCustomer(),car));
 
 		});
+		startSignal.countDown();
+
 	}
 }

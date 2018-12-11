@@ -1,5 +1,4 @@
 package bgu.spl.mics;
-
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +17,7 @@ public class MessageBusImpl implements MessageBus {
 	private ConcurrentHashMap<MicroService, BlockingQueue<Message>> queueMap;
 	private ConcurrentHashMap<Class<?>, BlockingQueue<MicroService>> messageSubscribersMap;
 	private ConcurrentHashMap<Event, Future> futuresMap;
+	private ConcurrentHashMap<Class<?>,Object> typeLocks;
 
 
 
@@ -27,7 +27,7 @@ public class MessageBusImpl implements MessageBus {
 		this.queueMap = new ConcurrentHashMap<>();
 		this.messageSubscribersMap = new ConcurrentHashMap<>();
 		this.futuresMap = new ConcurrentHashMap<>();
-
+		this.typeLocks=new ConcurrentHashMap<>();
 
 	}
 
@@ -47,10 +47,11 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 
-	@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-	private void subscribeMessage(Class<? extends Message> type,MicroService m) {
 
-		synchronized (type) {
+	private void subscribeMessage(Class<? extends Message> type,MicroService m) {
+		if(!typeLocks.containsKey(type))
+			typeLocks.put(type,new Object());
+		synchronized (typeLocks.get(type)) {
 			try {
 				if (messageSubscribersMap.containsKey(type))
 					messageSubscribersMap.get(type).put(m);
@@ -101,7 +102,6 @@ public class MessageBusImpl implements MessageBus {
 	public void sendBroadcast(Broadcast b) {
 		if (!messageSubscribersMap.containsKey(b.getClass()))
 			return;
-
 		Queue<MicroService> microServices = messageSubscribersMap.get(b.getClass());
 		for (MicroService m : microServices) {
 			if (m != null) {
@@ -122,13 +122,12 @@ public class MessageBusImpl implements MessageBus {
 	 * @return future from type T that will be resolved at some point
 	 */
 	@Override
-	@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 	public <T> Future<T> sendEvent(Event<T> e) {
 		if (!messageSubscribersMap.containsKey(e.getClass()))
 			return null;
 		BlockingQueue<MicroService> microServices = messageSubscribersMap.get(e.getClass());
 		Future<T> future = new Future<>();
-		synchronized (microServices) {
+		synchronized (messageSubscribersMap.get(e.getClass())) {
 			try {
 				MicroService round = microServices.take();
 				microServices.put(round);
@@ -147,7 +146,6 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		queueMap.put(m, new LinkedBlockingQueue<>());
-
 	}
 
 	/**
@@ -155,9 +153,8 @@ public class MessageBusImpl implements MessageBus {
 	 */
 	@Override
 	public void unregister(MicroService m) {
-
 		messageSubscribersMap.forEach((message, queue) -> {
-			synchronized (queue) {
+			synchronized (messageSubscribersMap.get(message)) {
 				queue.removeIf((micro) -> micro.equals(m));
 			}
 		});

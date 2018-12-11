@@ -7,6 +7,7 @@ import bgu.spl.mics.application.passiveObjects.*;
 import java.io.Serializable;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -22,15 +23,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SellingService extends MicroService implements Serializable {
 	private MoneyRegister moneyRegister;
 	private AtomicInteger currentTick;
-
-	public SellingService(String name,MoneyRegister moneyRegister) {
+	private final CountDownLatch startSignal;
+	private final CountDownLatch endSignal;
+	public SellingService(String name, MoneyRegister moneyRegister, CountDownLatch startSignal,CountDownLatch endSignal) {
 		super(name);
 		this.moneyRegister=moneyRegister;
 		this.currentTick=new AtomicInteger(0);
-
+		this.startSignal=startSignal;
+		this.endSignal=endSignal;
 	}
 
 	@Override
+
 	protected void initialize() {
 
 
@@ -43,7 +47,10 @@ public class SellingService extends MicroService implements Serializable {
 
 
 		//Subscribe To Termination
-		subscribeBroadcast(TerminationBroadcast.class, message-> this.terminate());
+		subscribeBroadcast(TerminationBroadcast.class, message-> {
+			this.terminate();
+			endSignal.countDown();
+		});
 
 
 		//Subscribe to BookOrderEvent
@@ -56,23 +63,25 @@ public class SellingService extends MicroService implements Serializable {
 			Future<Integer> bookPriceFuture=sendEvent(new CheckAvailabilityEvent(bookTitle));
 			int bookPrice=bookPriceFuture.get();
 			receipt.setPrice(bookPrice);
-			System.out.println(getName() +" got an answer an the book costs: "+bookPrice);
-			if(bookPrice!=-1 && customer.getAvailableCreditAmount()>=bookPrice){
-				System.out.println(getName() +"confirmed that the customer has enough money and sending to InventoryService");
-				Future<OrderResult> acquireBookFuture=sendEvent(new AcquireBookEvent(bookTitle));
-				OrderResult acquireBook=acquireBookFuture.get();
-				if(acquireBook==OrderResult.SUCCESSFULLY_TAKEN){
-					receipt.setIssuedTick(currentTick.get());
-					moneyRegister.chargeCreditCard(customer,bookPrice);
-					moneyRegister.file(receipt);
-					complete(ev,receipt);
-				}
-				else{
-					complete(ev,null);
-				}
+			System.out.println(getName() +" got an answer and the book: "+bookTitle+" costs: "+bookPrice);
+
+			//sync on customer moneyLock to prevent situation when customer can be charged and get into minus
+			synchronized (customer.getMoneyLock()) {
+				if (bookPrice != -1 && customer.getAvailableCreditAmount() >= bookPrice) {
+					System.out.println(getName() + "confirmed that the customer: " + customer.getName() + " has enough money and sending to InventoryService");
+					Future<OrderResult> acquireBookFuture = sendEvent(new AcquireBookEvent(bookTitle));
+					OrderResult acquireBook = acquireBookFuture.get();
+					if (acquireBook == OrderResult.SUCCESSFULLY_TAKEN) {
+						receipt.setIssuedTick(currentTick.get());
+						moneyRegister.chargeCreditCard(customer, bookPrice);
+						moneyRegister.file(receipt);
+						complete(ev, receipt);
+					} else
+						complete(ev, null);
+				} else
+					complete(ev, null);
 			}
-			else
-				complete(ev,null);
 		});
+		startSignal.countDown();
 	}
 }

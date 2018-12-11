@@ -1,11 +1,5 @@
 package bgu.spl.mics.application.passiveObjects;
-
-
 import bgu.spl.mics.application.Serialize;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +24,8 @@ public class Inventory {
 	//A Thread safe constructor
 	private Inventory() {
 		this.listOfBooks = new Vector<>();
-
 	}
+
 	public static Inventory getInstance() {
 		Inventory result = instance;
 		if (result == null) {
@@ -54,8 +48,7 @@ public class Inventory {
 	 * @post:listOfBooks.isEmpty()==false
 	 */
 	public void load (BookInventoryInfo[ ] inventory ) {
-
-		Collections.addAll(this.listOfBooks,inventory);
+		Collections.addAll(listOfBooks,inventory);
 	}
 
 	
@@ -76,7 +69,6 @@ public class Inventory {
 						val = bookToFind.getAmountInInventory();
 					}
 					while (!bookToFind.getAtomicAmountInInventory().compareAndSet(val, val -1));
-
 					return OrderResult.SUCCESSFULLY_TAKEN;
 				}
 			}
