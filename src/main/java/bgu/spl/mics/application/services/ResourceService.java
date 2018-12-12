@@ -43,6 +43,7 @@ public class ResourceService extends MicroService implements Serializable {
 		subscribeBroadcast(TerminationBroadcast.class, message->{
 			this.terminate();
 			endSignal.countDown();
+			System.out.println(getName() +" is terminated and endSignal on: "+endSignal.getCount());
 		});
 
 

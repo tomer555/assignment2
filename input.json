@@ -49,9 +49,9 @@
         {"bookTitle": "The Hunger Games", "tick": 2},
         {"bookTitle": "Tomers book", "tick": 2},
         {"bookTitle": "special book", "tick": 3},
+        {"bookTitle": "special book", "tick": 9},
         {"bookTitle": "special book", "tick": 3},
-        {"bookTitle": "special book", "tick": 3},
-        {"bookTitle": "special book", "tick": 3}
+        {"bookTitle": "special book", "tick": 9}
 
     ]
     }

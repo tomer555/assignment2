@@ -50,6 +50,7 @@ public class SellingService extends MicroService implements Serializable {
 		subscribeBroadcast(TerminationBroadcast.class, message-> {
 			this.terminate();
 			endSignal.countDown();
+			System.out.println(getName() +" is terminated and endSignal on: "+endSignal.getCount());
 		});
 
 
@@ -70,6 +71,7 @@ public class SellingService extends MicroService implements Serializable {
 				if (bookPrice != -1 && customer.getAvailableCreditAmount() >= bookPrice) {
 					System.out.println(getName() + "confirmed that the customer: " + customer.getName() + " has enough money and sending to InventoryService");
 					Future<OrderResult> acquireBookFuture = sendEvent(new AcquireBookEvent(bookTitle));
+					System.out.println(getName()+" might sleep here....");
 					OrderResult acquireBook = acquireBookFuture.get();
 					if (acquireBook == OrderResult.SUCCESSFULLY_TAKEN) {
 						receipt.setIssuedTick(currentTick.get());

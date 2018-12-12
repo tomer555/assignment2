@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.DurationBroadcast;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.Inventory;
@@ -44,6 +45,7 @@ public class TimeService extends MicroService{
 		subscribeBroadcast(TerminationBroadcast.class, message->{
 			this.terminate();
 			endSignal.countDown();
+			System.out.println(getName() +" is terminated and endSignal on: "+endSignal.getCount());
 		});
 
 		TimerTask timerTask = new TimerTask() {
@@ -67,8 +69,9 @@ public class TimeService extends MicroService{
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-
+		sendBroadcast(new DurationBroadcast(duration));
 		timer.scheduleAtFixedRate(timerTask,0,speed);
+
 	}
 	public int getDuration() {
 		return duration;

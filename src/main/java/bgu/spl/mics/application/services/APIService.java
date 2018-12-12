@@ -53,12 +53,14 @@ public class APIService extends MicroService implements Serializable {
 	}
 
 
+
 	@Override
 	protected void initialize() {
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message-> {
             this.terminate();
             endSignal.countDown();
+            System.out.println(getName() +" is terminated and endSignal on: "+endSignal.getCount());
         });
 
 		//Subscribe to TickBroadcast
@@ -77,6 +79,7 @@ public class APIService extends MicroService implements Serializable {
 			for(int i=0;i<orderReceiptFutures.size();i++){
 				Future<OrderReceipt> future =orderReceiptFutures.get(i);
 				if(future.isDone()) {
+					System.out.println(getName() +" maybe sleep here");
 					OrderReceipt receipt = future.get();
 					if(receipt!=null) {
 						System.out.println(getName()+" successfully got back the receipt of book: "+receipt.getBookTitle()+", Order tick: "+ receipt.getOrderTick()+", process Tick : "+receipt.getProcessTick()+", issued Tick: "+receipt.getIssuedTick());
@@ -86,6 +89,7 @@ public class APIService extends MicroService implements Serializable {
                         i--;
                     }
                 }
+                System.out.println(getName()+" finished tick: "+currentTick);
 		});
         startSignal.countDown();
 	}

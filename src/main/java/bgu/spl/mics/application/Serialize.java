@@ -7,14 +7,9 @@ import java.io.ObjectOutputStream;
  * file path and Serialize this object into the file
  */
 public class Serialize {
-
     public static void serializeObject(String path, Object object){
-        try{
-            FileOutputStream fileOut=new FileOutputStream(path);
-            ObjectOutputStream out =new ObjectOutputStream(fileOut);
+        try(FileOutputStream fileOut=new FileOutputStream(path);ObjectOutputStream out =new ObjectOutputStream(fileOut)){
             out.writeObject(object);
-            out.close();
-            fileOut.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
