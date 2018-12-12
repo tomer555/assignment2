@@ -19,7 +19,8 @@ public class Deserialize {
         try {
             // Reading the object from a file
             FileInputStream file = new FileInputStream(path);
-            ObjectInputStream in = new ObjectInputStream(file);
+            BufferedInputStream bf=new BufferedInputStream(file);
+            ObjectInputStream in = new ObjectInputStream(bf);
             // Method for deserialization of object
             output =(HashMap<String,Integer>)  in.readObject();
             in.close();
@@ -38,7 +39,8 @@ public class Deserialize {
         try {
             // Reading the object from a file
             FileInputStream file = new FileInputStream(path);
-            ObjectInputStream in = new ObjectInputStream(file);
+            BufferedInputStream bf=new BufferedInputStream(file);
+            ObjectInputStream in = new ObjectInputStream(bf);
             // Method for deserialization of object
             output =(HashMap<Integer,Customer>)  in.readObject();
             in.close();
@@ -56,7 +58,8 @@ public class Deserialize {
         try {
             // Reading the object from a file
             FileInputStream file = new FileInputStream(path);
-            ObjectInputStream in = new ObjectInputStream(file);
+            BufferedInputStream bf=new BufferedInputStream(file);
+            ObjectInputStream in = new ObjectInputStream(bf);
             // Method for deserialization of object
             output =(List<OrderReceipt>)  in.readObject();
             in.close();

@@ -25,12 +25,14 @@ public class SellingService extends MicroService implements Serializable {
 	private AtomicInteger currentTick;
 	private final CountDownLatch startSignal;
 	private final CountDownLatch endSignal;
+
 	public SellingService(String name, MoneyRegister moneyRegister, CountDownLatch startSignal,CountDownLatch endSignal) {
 		super(name);
 		this.moneyRegister=moneyRegister;
 		this.currentTick=new AtomicInteger(0);
 		this.startSignal=startSignal;
 		this.endSignal=endSignal;
+
 	}
 
 	@Override
@@ -50,7 +52,7 @@ public class SellingService extends MicroService implements Serializable {
 		subscribeBroadcast(TerminationBroadcast.class, message-> {
 			this.terminate();
 			endSignal.countDown();
-			System.out.println(getName() +" is terminated and endSignal on: "+endSignal.getCount());
+			System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
 		});
 
 
@@ -69,15 +71,18 @@ public class SellingService extends MicroService implements Serializable {
 			//sync on customer moneyLock to prevent situation when customer can be charged and get into minus
 			synchronized (customer.getMoneyLock()) {
 				if (bookPrice != -1 && customer.getAvailableCreditAmount() >= bookPrice) {
-					System.out.println(getName() + "confirmed that the customer: " + customer.getName() + " has enough money and sending to InventoryService");
+					System.out.println(getName() + " confirmed that the customer: " + customer.getName() + " has enough money and sending to InventoryService");
 					Future<OrderResult> acquireBookFuture = sendEvent(new AcquireBookEvent(bookTitle));
-					System.out.println(getName()+" might sleep here....");
 					OrderResult acquireBook = acquireBookFuture.get();
 					if (acquireBook == OrderResult.SUCCESSFULLY_TAKEN) {
 						receipt.setIssuedTick(currentTick.get());
 						moneyRegister.chargeCreditCard(customer, bookPrice);
 						moneyRegister.file(receipt);
 						complete(ev, receipt);
+						System.out.println(getName()+" stored the receipt of book: "+receipt.getBookTitle()+", Order tick: "+ receipt.getOrderTick()+", process Tick : "+receipt.getProcessTick()+", issued Tick: "+receipt.getIssuedTick());
+						sendEvent(new DeliveryEvent(customer));
+						System.out.println(getName()+ " send a DeliveryEvent to a Logistic Service ");
+
 					} else
 						complete(ev, null);
 				} else

@@ -41,9 +41,11 @@ public class ResourceService extends MicroService implements Serializable {
 
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message->{
+			resourcesHolder.cleanFutures();
+			System.out.println("resolved all waiting futures with NULL");
 			this.terminate();
 			endSignal.countDown();
-			System.out.println(getName() +" is terminated and endSignal on: "+endSignal.getCount());
+			System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
 		});
 
 

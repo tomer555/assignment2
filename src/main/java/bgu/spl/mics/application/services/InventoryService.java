@@ -43,7 +43,7 @@ public class InventoryService extends MicroService implements Serializable {
 		subscribeBroadcast(TerminationBroadcast.class, message->{
 			this.terminate();
 			endSignal.countDown();
-			System.out.println(getName() +" is terminated and endSignal on: "+endSignal.getCount());
+			System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
 		});
 
 		/*

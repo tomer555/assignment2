@@ -27,7 +27,7 @@
         "id": 123456789,
         "name": "Bruria",
         "address": "NewYork 123",
-        "distance":20,
+        "distance":50,
         "creditCard":{"number":67890,"amount":500},
         "orderSchedule": [
             {"bookTitle": "special book", "tick": 5},
@@ -35,10 +35,45 @@
             {"bookTitle": "Harry Poter", "tick": 6},
             {"bookTitle": "special book", "tick": 7},
             {"bookTitle": "special book", "tick": 7},
-            {"bookTitle": "special book", "tick": 9}
+            {"bookTitle": "special book", "tick": 9},
+            {"bookTitle": "special book", "tick": 7},
+            {"bookTitle": "special book", "tick": 7}
 
           ]
       },
+        {
+            "id": 308427384,
+            "name": "Tomer",
+            "address": "Laskov 16",
+            "distance":200,
+            "creditCard":{"number":67890,"amount":500},
+            "orderSchedule": [
+                {"bookTitle": "special book", "tick": 5},
+                {"bookTitle": "The Hunger Games", "tick": 6},
+                {"bookTitle": "Harry Poter", "tick": 1},
+                {"bookTitle": "special book", "tick": 7},
+                {"bookTitle": "special book", "tick": 1},
+                {"bookTitle": "special book", "tick": 2},
+                {"bookTitle": "special book", "tick": 9}
+
+            ]
+        },
+        {
+            "id": 20352678,
+            "name": "Ofir",
+            "address": "RishonLez 123",
+            "distance":100,
+            "creditCard":{"number":67890,"amount":500},
+            "orderSchedule": [
+                {"bookTitle": "special book", "tick": 1},
+                {"bookTitle": "The Hunger Games", "tick": 1},
+                {"bookTitle": "Harry Poter", "tick": 6},
+                {"bookTitle": "special book", "tick": 1},
+                {"bookTitle": "special book", "tick": 7},
+                {"bookTitle": "special book", "tick": 9}
+
+            ]
+        },
     {
         "id": 234567891,
         "name": "Shraga",

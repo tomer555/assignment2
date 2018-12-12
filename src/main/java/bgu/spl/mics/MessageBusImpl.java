@@ -17,9 +17,6 @@ public class MessageBusImpl implements MessageBus {
 	private ConcurrentHashMap<MicroService, BlockingQueue<Message>> queueMap;
 	private ConcurrentHashMap<Class<?>, Queue<MicroService>> messageSubscribersMap;
 	private ConcurrentHashMap<Event, Future> futuresMap;
-	private ConcurrentHashMap<Class<?>,Object> typeLocks;
-
-
 
 
 	//A Thread safe constructor
@@ -27,12 +24,10 @@ public class MessageBusImpl implements MessageBus {
 		this.queueMap = new ConcurrentHashMap<>();
 		this.messageSubscribersMap = new ConcurrentHashMap<>();
 		this.futuresMap = new ConcurrentHashMap<>();
-		this.typeLocks=new ConcurrentHashMap<>();
-
 	}
 
 	/**
-	 * @return Singleton MessageBus \
+	 * @return Singleton MessageBus
 	 */
 	public static MessageBus getInstance() {
 		MessageBus result = instance;
@@ -47,11 +42,9 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 
-
+	@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 	private void subscribeMessage(Class<? extends Message> type,MicroService m) {
-		if(!typeLocks.containsKey(type))
-			typeLocks.put(type,new Object());
-		synchronized (typeLocks.get(type)) {
+		synchronized (type) {
 				if (messageSubscribersMap.containsKey(type))
 					messageSubscribersMap.get(type).add(m);
 				else {
@@ -103,7 +96,6 @@ public class MessageBusImpl implements MessageBus {
 			for (MicroService m : microServices) {
 				if (m != null) {
 					try {
-						System.out.println("sending broadcast");
 						queueMap.get(m).put(b);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -128,7 +120,6 @@ public class MessageBusImpl implements MessageBus {
 		Queue<MicroService> microServices = messageSubscribersMap.get(e.getClass());
 		Future<T> future = new Future<>();
 		futuresMap.put(e, future);
-		System.out.println("before");
 		synchronized (messageSubscribersMap.get(e.getClass())) {
 			if (!messageSubscribersMap.get(e.getClass()).isEmpty()) {
 					MicroService round = microServices.poll();
@@ -136,9 +127,12 @@ public class MessageBusImpl implements MessageBus {
 						microServices.add(round);
 						queueMap.get(round).add(e);
 					}
+					else
+						return null;
 			}
+			else
+				return null;
 		}
-		System.out.println("after");
 		return future;
 	}
 
@@ -154,19 +148,24 @@ public class MessageBusImpl implements MessageBus {
 	 * @param m the micro-service to unregister.
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public void unregister(MicroService m) {
-
 		messageSubscribersMap.forEach((message, queue) -> {
 			synchronized (messageSubscribersMap.get(message)) {
 				if(queue!=null)
 					queue.removeIf(m::equals);
 			}
 		});
+		/*clear all the messages in the Micro-Service queue
+		  resolving all the futures to null and deleting the queue
+		 */
 		synchronized (queueMap.get(m)) {
+			queueMap.get(m).forEach((message -> {
+				if(message instanceof Event)
+					futuresMap.get(message).resolve(null);
+			}));
 			queueMap.remove(m);
 		}
-
-
 	}
 
 	/**

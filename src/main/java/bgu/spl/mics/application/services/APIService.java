@@ -1,15 +1,12 @@
 package bgu.spl.mics.application.services;
-import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BookOrderEvent;
-import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.*;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 
 
@@ -24,7 +21,6 @@ import java.util.concurrent.CountDownLatch;
  */
 public class APIService extends MicroService implements Serializable {
 	private List<OrderReceipt> orderSchedule;
-	private Vector<Future<OrderReceipt>> orderReceiptFutures;
 	private Customer customer;
 	private int currentTick;
 	private int TickToSend;
@@ -36,7 +32,6 @@ public class APIService extends MicroService implements Serializable {
 	public APIService(String name, List<OrderReceipt> orderSchedule, Customer customer,CountDownLatch startSignal,CountDownLatch endSignal) {
 		super(name);
 		this.orderSchedule=orderSchedule;
-		this.orderReceiptFutures=new Vector<>();
 		this.customer=customer;
 		this.currentTick=0;
 		this.TickToSend=0;
@@ -60,36 +55,19 @@ public class APIService extends MicroService implements Serializable {
 		subscribeBroadcast(TerminationBroadcast.class, message-> {
             this.terminate();
             endSignal.countDown();
-            System.out.println(getName() +" is terminated and endSignal on: "+endSignal.getCount());
+            System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
         });
 
 		//Subscribe to TickBroadcast
 		subscribeBroadcast(TickBroadcast.class, message->{
 			currentTick=message.getCurrentTick();
 			System.out.println(getName() +" time: "+currentTick);
-
 			while (index<orderSchedule.size() && currentTick==TickToSend){
 				OrderReceipt orderReceipt=orderSchedule.get(index);
-				Future<OrderReceipt> orderFuture = sendEvent(new BookOrderEvent(orderReceipt, customer));
-				orderReceiptFutures.add(orderFuture);
+				sendEvent(new BookOrderEvent(orderReceipt, customer));
 				if(++index<orderSchedule.size())
 					TickToSend=orderSchedule.get(index).getOrderTick();
 			}
-
-			for(int i=0;i<orderReceiptFutures.size();i++){
-				Future<OrderReceipt> future =orderReceiptFutures.get(i);
-				if(future.isDone()) {
-					System.out.println(getName() +" maybe sleep here");
-					OrderReceipt receipt = future.get();
-					if(receipt!=null) {
-						System.out.println(getName()+" successfully got back the receipt of book: "+receipt.getBookTitle()+", Order tick: "+ receipt.getOrderTick()+", process Tick : "+receipt.getProcessTick()+", issued Tick: "+receipt.getIssuedTick());
-                            sendEvent(new DeliveryEvent(customer));
-                        }
-                        orderReceiptFutures.remove(i);
-                        i--;
-                    }
-                }
-                System.out.println(getName()+" finished tick: "+currentTick);
 		});
         startSignal.countDown();
 	}

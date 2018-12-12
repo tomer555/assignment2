@@ -38,7 +38,9 @@ public class ResourcesHolder {
 		return result;
 	}
 
-
+	public void cleanFutures(){
+		futuresToResolve.forEach(f->f.resolve(null));
+	}
 	
 	/**
      * Tries to acquire a vehicle and gives a future object which will
