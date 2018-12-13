@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JsonSchemaMappingsProjectConfiguration">
+    <state>
+      <map>
+        <entry key="input">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="input" />
+              <option name="relativePathToSchema" value="https://www.cs.bgu.ac.il/~spl191/wiki.files/input.json" />
+            </SchemaInfo>
+          </value>
+        </entry>
+      </map>
+    </state>
+  </component>
+</project>
