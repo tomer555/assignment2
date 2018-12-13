@@ -39,20 +39,14 @@ public class SellingService extends MicroService implements Serializable {
 
 	protected void initialize() {
 
-
 		//Subscribe to TickBroadcast
-		subscribeBroadcast(TickBroadcast.class,message->
-		{
-			currentTick.set(message.getCurrentTick());
-			System.out.println(getName() +" time :"+currentTick);
-		});
+		subscribeBroadcast(TickBroadcast.class,message-> currentTick.set(message.getCurrentTick()));
 
 
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message-> {
 			this.terminate();
 			endSignal.countDown();
-			System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
 		});
 
 
@@ -66,12 +60,11 @@ public class SellingService extends MicroService implements Serializable {
 			Future<Integer> bookPriceFuture=sendEvent(new CheckAvailabilityEvent(bookTitle));
 			int bookPrice=bookPriceFuture.get();
 			receipt.setPrice(bookPrice);
-			System.out.println(getName() +" got an answer and the book: "+bookTitle+" costs: "+bookPrice);
+
 
 			//sync on customer moneyLock to prevent situation when customer can be charged and get into minus
 			synchronized (customer.getMoneyLock()) {
 				if (bookPrice != -1 && customer.getAvailableCreditAmount() >= bookPrice) {
-					System.out.println(getName() + " confirmed that the customer: " + customer.getName() + " has enough money and sending to InventoryService");
 					Future<OrderResult> acquireBookFuture = sendEvent(new AcquireBookEvent(bookTitle));
 					OrderResult acquireBook = acquireBookFuture.get();
 					if (acquireBook == OrderResult.SUCCESSFULLY_TAKEN) {
@@ -79,10 +72,7 @@ public class SellingService extends MicroService implements Serializable {
 						moneyRegister.chargeCreditCard(customer, bookPrice);
 						moneyRegister.file(receipt);
 						complete(ev, receipt);
-						System.out.println(getName()+" stored the receipt of book: "+receipt.getBookTitle()+", Order tick: "+ receipt.getOrderTick()+", process Tick : "+receipt.getProcessTick()+", issued Tick: "+receipt.getIssuedTick());
 						sendEvent(new DeliveryEvent(customer));
-						System.out.println(getName()+ " send a DeliveryEvent to a Logistic Service ");
-
 					} else
 						complete(ev, null);
 				} else

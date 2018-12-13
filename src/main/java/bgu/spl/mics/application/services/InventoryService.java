@@ -43,7 +43,6 @@ public class InventoryService extends MicroService implements Serializable {
 		subscribeBroadcast(TerminationBroadcast.class, message->{
 			this.terminate();
 			endSignal.countDown();
-			System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
 		});
 
 		/*
@@ -51,7 +50,6 @@ public class InventoryService extends MicroService implements Serializable {
 			if not exists or out of stock will return -1
 		 */
 		subscribeEvent(CheckAvailabilityEvent.class, (ev) -> {
-			System.out.println(getName()+ " got CheckAvailabilityEvent of book: "+ev.getBookTitle()+" to check");
 			Integer bookPrice = inventory.checkAvailabilityAndGetPrice(ev.getBookTitle());
 			complete(ev, bookPrice);
 		});
@@ -61,7 +59,6 @@ public class InventoryService extends MicroService implements Serializable {
 			if succeeds will return SUCCESSFULLY_TAKEN, else will return NOT_IN_STOCK
 		 */
 		subscribeEvent(AcquireBookEvent.class,ev->{
-			System.out.println(getName()+ " got AcquireBookEvent of book: "+ev.getBookTitle()+" to acquire");
 			OrderResult bookTaken =inventory.take(ev.getBookTitle());
 			complete(ev,bookTaken);
 		});

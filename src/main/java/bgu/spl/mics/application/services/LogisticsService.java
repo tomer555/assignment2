@@ -32,35 +32,24 @@ public class LogisticsService extends MicroService implements Serializable {
 	@Override
 	protected void initialize() {
 
-
 		//Subscribe to TickBroadcast
-		subscribeBroadcast(TickBroadcast.class,message->
-		{
-			currentTick.set(message.getCurrentTick());
-			System.out.println(getName() +" time :"+currentTick);
+		subscribeBroadcast(TickBroadcast.class,message-> currentTick.set(message.getCurrentTick()));
 
-		});
 
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message->{
 			this.terminate();
 			endSignal.countDown();
-			System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
 		});
 
 
 		//Subscribe To DeliveryEvent
 		subscribeEvent(DeliveryEvent.class,ev->{
-			System.out.println(getName() + " got new Delivery to customer: " + ev.getCustomer().getName());
-			System.out.println(getName() + " asking Recourse Service to acquire a car");
 			Future<Future<DeliveryVehicle>> doubleDeliveryEventFuture = sendEvent(new AcquireCarEvent(ev.getCustomer()));
 			if(doubleDeliveryEventFuture!=null && doubleDeliveryEventFuture.get()!=null &&doubleDeliveryEventFuture.get().get()!=null) {
 				DeliveryVehicle car=doubleDeliveryEventFuture.get().get();
-				System.out.println(getName() + " got the car to deliver: " + car.getLicense());
 				Customer customer = ev.getCustomer();
 				car.deliver(customer.getAddress(), customer.getDistance());
-				System.out.println(getName() + " confirmed that car: " + car.getLicense() + " delivered the book to: " + ev.getCustomer().getAddress());
-				System.out.println(getName() + " returning car to Resource Service");
 				sendEvent(new ReturnCarEvent(ev.getCustomer(), car));
 				}
 		});

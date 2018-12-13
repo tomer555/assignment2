@@ -38,30 +38,20 @@ public class ResourceService extends MicroService implements Serializable {
 	@Override
 	protected void initialize() {
 
-
 		//Subscribe To Termination
 		subscribeBroadcast(TerminationBroadcast.class, message->{
 			resourcesHolder.cleanFutures();
-			System.out.println("resolved all waiting futures with NULL");
 			this.terminate();
 			endSignal.countDown();
-			System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
 		});
-
 
 		subscribeEvent(AcquireCarEvent.class,ev->{
-			System.out.println(getName() + " got a demand for a Vehicle");
 			Future <DeliveryVehicle> deliveryVehicleFuture=resourcesHolder.acquireVehicle();
-				System.out.println(getName()+ " Returned a Future for Vehicle");
-				complete(ev,deliveryVehicleFuture);
+			complete(ev,deliveryVehicleFuture);
 			});
 
+		subscribeEvent(ReturnCarEvent.class,ev-> resourcesHolder.releaseVehicle(ev.getCarToReturn()));
 
-
-		subscribeEvent(ReturnCarEvent.class,ev->{
-			resourcesHolder.releaseVehicle(ev.getCarToReturn());
-			System.out.println(getName() +" got back car: "+ev.getCarToReturn().getLicense()+" and returned it");
-		});
 		startSignal.countDown();
 	}
 }

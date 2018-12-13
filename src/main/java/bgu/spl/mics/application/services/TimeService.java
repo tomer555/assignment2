@@ -44,13 +44,12 @@ public class TimeService extends MicroService{
 		subscribeBroadcast(TerminationBroadcast.class, message->{
 			this.terminate();
 			endSignal.countDown();
-			System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
 		});
 
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
-                System.out.println("Global time: "+ticks);
+
 				if(ticks<duration)
 					sendBroadcast(new TickBroadcast(ticks));
 				else {

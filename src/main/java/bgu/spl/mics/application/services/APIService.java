@@ -55,13 +55,11 @@ public class APIService extends MicroService implements Serializable {
 		subscribeBroadcast(TerminationBroadcast.class, message-> {
             this.terminate();
             endSignal.countDown();
-            System.out.println(getName() +" is terminated | endSignal: "+endSignal.getCount());
         });
 
 		//Subscribe to TickBroadcast
 		subscribeBroadcast(TickBroadcast.class, message->{
 			currentTick=message.getCurrentTick();
-			System.out.println(getName() +" time: "+currentTick);
 			while (index<orderSchedule.size() && currentTick==TickToSend){
 				OrderReceipt orderReceipt=orderSchedule.get(index);
 				sendEvent(new BookOrderEvent(orderReceipt, customer));
