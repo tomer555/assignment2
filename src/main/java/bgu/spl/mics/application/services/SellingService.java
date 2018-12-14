@@ -58,28 +58,29 @@ public class SellingService extends MicroService implements Serializable {
 			String bookTitle=ev.getOrder().getBookTitle();
 			Customer customer=ev.getCustomer();
 			Future<Integer> bookPriceFuture=sendEvent(new CheckAvailabilityEvent(bookTitle));
-			Integer bookPrice;
+			Integer bookPrice=-1;
 			try {
-				bookPrice = bookPriceFuture.get();
-			}
-			catch (NullPointerException e){
-				bookPrice=-1;
-			}
-			//sync on customer moneyLock to prevent situation when customer can be charged and get into minus
-			synchronized (customer.getMoneyLock()) {
-				if (bookPrice != -1 && customer.getAvailableCreditAmount() >= bookPrice) {
-					receipt.setPrice(bookPrice);
-					Future<OrderResult> acquireBookFuture = sendEvent(new AcquireBookEvent(bookTitle));
-					if (acquireBookFuture !=null && acquireBookFuture.get()!=null && acquireBookFuture.get()==OrderResult.SUCCESSFULLY_TAKEN) {
-						receipt.setIssuedTick(currentTick.get());
-						moneyRegister.chargeCreditCard(customer, bookPrice);
-						moneyRegister.file(receipt);
-						complete(ev, receipt);
-						sendEvent(new DeliveryEvent(customer));
+				if (bookPriceFuture != null)
+					bookPrice = bookPriceFuture.get();
+				//sync on customer moneyLock to prevent situation when customer can be charged and get into minus
+				synchronized (customer.getMoneyLock()) {
+					if (bookPrice != -1 && customer.getAvailableCreditAmount() >= bookPrice) {
+						receipt.setPrice(bookPrice);
+						Future<OrderResult> acquireBookFuture = sendEvent(new AcquireBookEvent(bookTitle));
+						if (acquireBookFuture != null && acquireBookFuture.get() != null && acquireBookFuture.get() == OrderResult.SUCCESSFULLY_TAKEN) {
+							receipt.setIssuedTick(currentTick.get());
+							moneyRegister.chargeCreditCard(customer, bookPrice);
+							moneyRegister.file(receipt);
+							complete(ev, receipt);
+							sendEvent(new DeliveryEvent(customer));
+						} else
+							complete(ev, null);
 					} else
 						complete(ev, null);
-				} else
-					complete(ev, null);
+				}
+			}
+			catch (NullPointerException e){
+				complete(ev, null);
 			}
 		});
 		startSignal.countDown();
