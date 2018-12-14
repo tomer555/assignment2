@@ -58,17 +58,17 @@ public class SellingService extends MicroService implements Serializable {
 			String bookTitle=ev.getOrder().getBookTitle();
 			Customer customer=ev.getCustomer();
 			Future<Integer> bookPriceFuture=sendEvent(new CheckAvailabilityEvent(bookTitle));
-			Integer bookPrice=null;
+			Integer bookPrice;
 			try {
 				bookPrice = bookPriceFuture.get();
 			}
-			catch (NullPointerException e){}
-			if(bookPrice==null)
+			catch (NullPointerException e){
 				bookPrice=-1;
-			receipt.setPrice(bookPrice);
+			}
 			//sync on customer moneyLock to prevent situation when customer can be charged and get into minus
 			synchronized (customer.getMoneyLock()) {
 				if (bookPrice != -1 && customer.getAvailableCreditAmount() >= bookPrice) {
+					receipt.setPrice(bookPrice);
 					Future<OrderResult> acquireBookFuture = sendEvent(new AcquireBookEvent(bookTitle));
 					if (acquireBookFuture !=null && acquireBookFuture.get()!=null && acquireBookFuture.get()==OrderResult.SUCCESSFULLY_TAKEN) {
 						receipt.setIssuedTick(currentTick.get());
