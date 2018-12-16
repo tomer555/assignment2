@@ -83,6 +83,7 @@ public class Deserialize {
             // Method for deserialization of object
             output =(MoneyRegister)  in.readObject();
             in.close();
+            bf.close();
             file.close();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
