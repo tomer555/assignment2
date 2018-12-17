@@ -3,10 +3,7 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.passiveObjects.*;
-
 import java.io.Serializable;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 

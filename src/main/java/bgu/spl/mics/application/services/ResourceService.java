@@ -4,15 +4,10 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireCarEvent;
 import bgu.spl.mics.application.messages.ReturnCarEvent;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
-import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.*;
-
 import java.io.Serializable;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * ResourceService is in charge of the store resources - the delivery vehicles.
